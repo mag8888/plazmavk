@@ -29,6 +29,8 @@ async function bootstrap() {
     app.use(helmet({
       contentSecurityPolicy: false, // CSP managed by individual pages
       crossOriginEmbedderPolicy: false, // Needed for Telegram WebApp
+      crossOriginOpenerPolicy: false, // CRITICAL FOR VK Bridge: prevents severing postMessage to window.parent
+      crossOriginResourcePolicy: false, // Allows cross-origin resources
       xFrameOptions: false, // CRITICAL FOR VK MINI APPS (helmet v8+)
     }));
 

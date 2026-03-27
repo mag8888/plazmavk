@@ -3,10 +3,10 @@
   "build": {
     "builder": "NIXPACKS",
     "installCommand": "npm install",
-    "buildCommand": "npm install && npm run prisma:generate && npm run migrate:deploy && npm run build"
+    "buildCommand": "npm run prisma:generate && npm run build"
   },
   "deploy": {
-    "startCommand": "npm start",
+    "startCommand": "npm run migrate:deploy && npm start",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
