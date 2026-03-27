@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PLAZMA</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <script>
+        if (window.vkBridge) {
+            window.vkBridge.send('VKWebAppInit').catch(console.error);
+        }
+    </script>
     <link rel="stylesheet" href="/webapp/static/styles.css?v=monochrome_final_v7">
     <!-- DOMPurify for safe HTML rendering -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
