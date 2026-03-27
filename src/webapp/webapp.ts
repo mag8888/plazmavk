@@ -109,7 +109,7 @@ const extractTelegramUser = (req: express.Request, res: express.Response, next: 
     let vkUser = null;
     let isValid = false;
     const vkSignString = req.headers['x-vk-sign'] as string;
-    const vkSecret = process.env.VK_APP_SECRET || '';
+    const vkSecret = (process.env.VK_APP_SECRET || '').trim();
 
     // If there's a sign string, validate it
     if (vkSignString) {
@@ -182,6 +182,68 @@ const extractTelegramUser = (req: express.Request, res: express.Response, next: 
     next();
   }
 };
+
+// Data Migration from old WebApp (Temporary endpoint)
+router.get('/api/migrate-from-old', async (req, res) => {
+  try {
+    const { prisma } = await import('../lib/prisma.js');
+    
+    console.log('🔄 Fetching categories from old app...');
+    const catRes = await fetch('https://plazma.up.railway.app/webapp/api/categories');
+    if (!catRes.ok) throw new Error(`Failed to fetch categories: ${catRes.statusText}`);
+    const categories = (await catRes.json()) as any[];
+    
+    let catCount = 0;
+    for (const cat of categories) {
+      await prisma.category.upsert({
+        where: { id: cat.id },
+        update: { name: cat.name, slug: cat.slug, sortOrder: cat.sortOrder, isVisibleInWebapp: cat.isVisibleInWebapp },
+        create: { id: cat.id, name: cat.name, slug: cat.slug, sortOrder: cat.sortOrder, isVisibleInWebapp: cat.isVisibleInWebapp, isActive: true }
+      });
+      catCount++;
+    }
+
+    console.log('🔄 Fetching products from old app...');
+    const prodRes = await fetch('https://plazma.up.railway.app/webapp/api/products');
+    if (!prodRes.ok) throw new Error(`Failed to fetch products: ${prodRes.statusText}`);
+    const products = (await prodRes.json()) as any[];
+
+    let prodCount = 0;
+    for (const prod of products) {
+      await prisma.product.upsert({
+        where: { id: prod.id },
+        update: {
+          title: prod.title,
+          price: prod.price,
+          categoryId: prod.categoryId,
+          imageUrl: prod.imageUrl,
+          summary: prod.summary || null,
+          description: prod.description || null,
+          sortOrder: prod.sortOrder,
+          isActive: true
+        },
+        create: {
+          id: prod.id,
+          title: prod.title,
+          price: prod.price,
+          categoryId: prod.categoryId,
+          imageUrl: prod.imageUrl,
+          summary: prod.summary || null,
+          description: prod.description || null,
+          sortOrder: prod.sortOrder,
+          isActive: true
+        }
+      });
+      prodCount++;
+    }
+    
+    console.log(`✅ Migration complete: ${catCount} categories, ${prodCount} products`);
+    res.json({ success: true, message: `Successfully migrated ${catCount} categories and ${prodCount} products!` });
+  } catch (error: any) {
+    console.error('❌ Migration error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Apply middleware to all API routes
 router.use('/api', extractTelegramUser);
