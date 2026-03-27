@@ -62,23 +62,31 @@ function checkVkSign(paramsString: string, secret: string): boolean {
     if (!paramsString || !secret) return false;
     // Handle both full URL and just query part
     const queryString = paramsString.startsWith('?') ? paramsString.slice(1) : paramsString;
-    const urlParams = new URLSearchParams(queryString);
-    const sign = urlParams.get('sign');
-    if (!sign) return false;
-
+    
+    const pairs = queryString.split('&');
     const queryParams: Record<string, string> = {};
-    for (const [key, value] of urlParams.entries()) {
-        if (key.startsWith('vk_')) {
-            queryParams[key] = value;
+    let sign = '';
+    
+    for (const pair of pairs) {
+        // Find first equal sign
+        const eqIndex = pair.indexOf('=');
+        if (eqIndex === -1) continue;
+        
+        const key = pair.slice(0, eqIndex);
+        const value = pair.slice(eqIndex + 1);
+        
+        if (key === 'sign') {
+            sign = value;
+        } else if (key.startsWith('vk_')) {
+            queryParams[key] = value; // Preserve raw encoding!
         }
     }
+    
+    if (!sign) return false;
 
     const signParams = Object.keys(queryParams)
         .sort()
-        .reduce((acc, key) => {
-            acc.push(`${key}=${queryParams[key]}`);
-            return acc;
-        }, [] as string[])
+        .map(key => `${key}=${queryParams[key]}`)
         .join('&');
 
     const cryptoSign = crypto
