@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { Context } from '../bot/context.js';
 import multer from 'multer';
 import { uploadImage } from '../services/cloudinary-service.js';
+import crypto from 'crypto';
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -56,70 +57,90 @@ router.get('/', (req, res) => {
   });
 });
 
-// Middleware to extract user info from Telegram WebApp
+// Validate VK Sign
+function checkVkSign(paramsString: string, secret: string): boolean {
+    if (!paramsString || !secret) return false;
+    // Handle both full URL and just query part
+    const queryString = paramsString.startsWith('?') ? paramsString.slice(1) : paramsString;
+    const urlParams = new URLSearchParams(queryString);
+    const sign = urlParams.get('sign');
+    if (!sign) return false;
+
+    const queryParams: Record<string, string> = {};
+    for (const [key, value] of urlParams.entries()) {
+        if (key.startsWith('vk_')) {
+            queryParams[key] = value;
+        }
+    }
+
+    const signParams = Object.keys(queryParams)
+        .sort()
+        .reduce((acc, key) => {
+            acc.push(`${key}=${queryParams[key]}`);
+            return acc;
+        }, [] as string[])
+        .join('&');
+
+    const cryptoSign = crypto
+        .createHmac('sha256', secret)
+        .update(signParams)
+        .digest('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=$/g, '');
+
+    return cryptoSign === sign;
+}
+
+// Middleware to extract user info from VK Mini App
 const extractTelegramUser = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Skip for OPTIONS requests (preflight)
   if (req.method === 'OPTIONS') return next();
 
   try {
-    // Try multiple ways to get Telegram user data
-    let telegramUser = null;
+    let vkUser = null;
+    let isValid = false;
+    const vkSignString = req.headers['x-vk-sign'] as string;
+    const vkSecret = process.env.VK_APP_SECRET || '';
 
-    // Method 1: From X-Telegram-User header (our custom header)
-    const telegramUserHeader = req.headers['x-telegram-user'] as string;
-    if (telegramUserHeader) {
-      // console.log('📱 Found X-Telegram-User header:', telegramUserHeader);
-      try {
-        // Safe decode for Cyrillic names
-        let jsonStr = telegramUserHeader;
+    // If there's a sign string, validate it
+    if (vkSignString) {
+      isValid = checkVkSign(vkSignString, vkSecret);
+      if (isValid) {
+        const queryString = vkSignString.startsWith('?') ? vkSignString.slice(1) : vkSignString;
+        const urlParams = new URLSearchParams(queryString);
+        const vkUserId = urlParams.get('vk_user_id');
+        if (vkUserId) {
+          vkUser = {
+            id: Number(vkUserId),
+            first_name: 'VK User ' + vkUserId,
+            last_name: '',
+            username: 'vk_' + vkUserId,
+            language_code: 'ru'
+          };
+          console.log('✅ VK user validated:', vkUser.id);
+        }
+      } else {
+        console.log('❌ Invalid VK Sign');
+      }
+    }
+
+    // Try fallback from X-Telegram-User header for tests/mocking
+    if (!isValid && process.env.NODE_ENV !== 'production') {
+      const telegramUserHeader = req.headers['x-telegram-user'] as string;
+      if (telegramUserHeader) {
         try {
-          jsonStr = decodeURIComponent(telegramUserHeader);
-        } catch (e) {
-          // Ignore decode errors, might be raw string
-        }
-        telegramUser = JSON.parse(jsonStr);
-        console.log('✅ Telegram user from header:', telegramUser?.id);
-      } catch (e) {
-        console.log('❌ Failed to parse X-Telegram-User:', e);
+          const jsonStr = decodeURIComponent(telegramUserHeader);
+          vkUser = JSON.parse(jsonStr);
+          console.log('⚠️ Falling back to X-Telegram-User header (Dev only):', vkUser?.id);
+        } catch (e) {}
       }
     }
 
-    // Method 2: From x-telegram-init-data header (original Telegram method)
-    if (!telegramUser) {
-      const initData = req.headers['x-telegram-init-data'] as string;
-      if (initData) {
-        console.log('📱 Found x-telegram-init-data:', initData);
-        const urlParams = new URLSearchParams(initData);
-        const userStr = urlParams.get('user');
-        if (userStr) {
-          telegramUser = JSON.parse(decodeURIComponent(userStr));
-          console.log('✅ Telegram user from init-data:', telegramUser);
-        }
-      }
-    }
-
-    // Method 2: From query parameters (fallback)
-    if (!telegramUser && req.query.user) {
-      console.log('📱 Found user in query params:', req.query.user);
-      try {
-        telegramUser = JSON.parse(decodeURIComponent(req.query.user as string));
-        console.log('✅ Telegram user from query:', telegramUser);
-      } catch (e) {
-        console.log('❌ Failed to parse user from query:', e);
-      }
-    }
-
-    // Method 3: From body (for POST requests)
-    if (!telegramUser && req.body && req.body.user) {
-      console.log('📱 Found user in body:', req.body.user);
-      telegramUser = req.body.user;
-      console.log('✅ Telegram user from body:', telegramUser);
-    }
-
-    // Method 4: Mock user for development/testing
-    if (!telegramUser && process.env.NODE_ENV !== 'production') {
-      console.log('⚠️ No Telegram user found, using mock user for development');
-      telegramUser = {
+    // Mock user for development/testing if enabled
+    if (!vkUser && process.env.NODE_ENV !== 'production') {
+      console.log('⚠️ No VK user found, using mock user for development');
+      vkUser = {
         id: 123456789,
         first_name: 'Test',
         last_name: 'User',
@@ -128,19 +149,18 @@ const extractTelegramUser = (req: express.Request, res: express.Response, next: 
       };
     }
 
-    (req as any).telegramUser = telegramUser;
-    console.log('🔐 Final telegram user:', telegramUser);
+    (req as any).telegramUser = vkUser;
 
     // Persist real user data if available
-    if (telegramUser && telegramUser.id !== 123456789) {
+    if (vkUser && vkUser.id !== 123456789) {
       import('../services/user-history.js').then(({ ensureWebUser }) => {
-        ensureWebUser(telegramUser).catch(err => console.error('❌ Failed to persist web user:', err));
+        ensureWebUser(vkUser).catch(err => console.error('❌ Failed to persist web user:', err));
       });
     }
 
     next();
   } catch (error) {
-    console.error('❌ Error extracting Telegram user:', error);
+    console.error('❌ Error extracting VK user:', error);
     // Set mock user on error ONLY in dev
     if (process.env.NODE_ENV !== 'production') {
       (req as any).telegramUser = {

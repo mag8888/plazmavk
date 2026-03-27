@@ -1,36 +1,12 @@
-// Telegram Web App API
-const tg = window.Telegram?.WebApp;
+// VK Mini App API
+const telegramToVk = window.vkBridge;
 
-// Initialize Telegram Web App
-if (tg) {
-    tg.ready();
-    tg.expand();
-
-    // Use Telegram theme colors
-    // Force Monochrome Premium Theme (Ignore Telegram Dark Mode)
-    // Force Dark Header to match new design
-    tg.setHeaderColor('#0d1b2a');
-    tg.setBackgroundColor('#ffffff');
-
-    // Reset CSS variables to strict white theme
-    document.documentElement.style.setProperty('--tg-bg-color', '#ffffff');
-    document.documentElement.style.setProperty('--tg-text-color', '#000000');
-    document.documentElement.style.setProperty('--tg-secondary-bg-color', '#f9f9f9');
-    document.documentElement.style.setProperty('--tg-button-color', '#000000');
-    document.documentElement.style.setProperty('--tg-button-text-color', '#ffffff');
-
-    // Handle viewport changes (only expand)
-    tg.onEvent('viewportChanged', () => {
-        tg.expand();
-    });
-
-    // Force light theme status bar
-    if (tg.setHeaderColor) {
-        if (tg.setHeaderColor) {
-            tg.setHeaderColor('#0d1b2a');
-        }
-    }
+// Initialize VK Mini App
+if (telegramToVk) {
+    telegramToVk.send('VKWebAppInit');
 }
+
+const tg = telegramToVk; // Dummy fallback for undefined checks
 
 // Global state
 let currentSection = null;
@@ -160,42 +136,34 @@ async function fetchAllActiveProducts() {
     return all;
 }
 
-// Get Telegram user data
+// Get VK user data from launch params
 function getTelegramUserData() {
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        return tg.initDataUnsafe.user;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('vk_user_id')) {
+        return {
+            id: params.get('vk_user_id'),
+            first_name: 'VK User',
+            last_name: '',
+            username: 'vk_' + params.get('vk_user_id'),
+            language_code: 'ru'
+        };
     }
-
-    // Fallback for development
-    // return {
-    //     id: 123456789,
-    //     first_name: 'Test',
-    //     last_name: 'User',
-    //     username: 'testuser',
-    //     language_code: 'ru'
-    // };
     return null;
 }
 
-// Get headers with Telegram user data
+// Get headers with VK sign data
 function getApiHeaders() {
     const user = getTelegramUserData();
     let userJson = '{}';
     try {
-        userJson = JSON.stringify(user || {});
-    } catch (e) {
-        console.error('Error stringifying user:', e);
-    }
+        if (user) userJson = JSON.stringify(user);
+    } catch (e) {}
 
     const headers = {
         'Content-Type': 'application/json',
+        'X-VK-Sign': window.location.search,
         'X-Telegram-User': encodeURIComponent(userJson)
     };
-
-    // Add init data if available (for backend verification)
-    if (tg && tg.initData) {
-        headers['X-Telegram-Init-Data'] = tg.initData;
-    }
 
     return headers;
 }
@@ -236,8 +204,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add haptic feedback for buttons (if available)
     function addHapticFeedback(element) {
         element.addEventListener('click', function () {
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
+            if (window.vkBridge) {
+                window.vkBridge.send('VKWebAppTapticImpactOccurred', { style: 'light' }).catch(() => {});
             }
         });
     }
@@ -345,10 +313,9 @@ async function toggleFavorite(productId, btnEl) {
 
 // Navigation functions
 function closeApp() {
-    if (tg) {
-        tg.close();
+    if (window.vkBridge) {
+        window.vkBridge.send('VKWebAppClose', { status: 'success' }).catch(() => {});
     } else {
-        // Fallback for development
         console.log('Closing app...');
     }
 }
@@ -740,19 +707,13 @@ async function loadProfileContent() {
 
 function shareReferralLink(link) {
     if (!link) { showError('Ссылка не загружена'); return; }
-    const text = `Привет! Присоединяйся к Plazma Water — натуральная плазменная вода для здоровья и красоты 💧\n\nПереходи по ссылке: ${link}`;
-    const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
-
-    // Try Telegram WebApp first
-    if (window.Telegram?.WebApp?.openTelegramLink) {
-        try { window.Telegram.WebApp.openTelegramLink(tgShareUrl); return; } catch (e) { }
+    if (window.vkBridge) {
+        window.vkBridge.send('VKWebAppShare', { link: link }).catch(() => {
+            window.open(link, '_blank');
+        });
+    } else {
+        window.open(link, '_blank');
     }
-    // Fallback: open link
-    if (window.Telegram?.WebApp?.openLink) {
-        try { window.Telegram.WebApp.openLink(tgShareUrl); return; } catch (e) { }
-    }
-    // Browser fallback
-    window.open(tgShareUrl, '_blank');
 }
 
 async function copyReferralLink(link) {
