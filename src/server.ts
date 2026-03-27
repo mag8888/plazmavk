@@ -29,6 +29,7 @@ async function bootstrap() {
     app.use(helmet({
       contentSecurityPolicy: false, // CSP managed by individual pages
       crossOriginEmbedderPolicy: false, // Needed for Telegram WebApp
+      xFrameOptions: false, // CRITICAL FOR VK MINI APPS (helmet v8+)
     }));
 
     app.use(express.json());
