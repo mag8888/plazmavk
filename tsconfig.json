@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": [
+      "ES2020"
+    ],
+    "module": "ES2020",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "baseUrl": "./src",
+    "paths": {
+      "@config/*": [
+        "config/*"
+      ],
+      "@bot/*": [
+        "bot/*"
+      ],
+      "@modules/*": [
+        "modules/*"
+      ],
+      "@services/*": [
+        "services/*"
+      ],
+      "@lib/*": [
+        "lib/*"
+      ],
+      "@types/*": [
+        "types/*"
+      ],
+      "@interfaces/*": [
+        "interfaces/*"
+      ]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "src",
+    "src/types/**/*",
+    "src/interfaces/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

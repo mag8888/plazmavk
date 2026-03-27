@@ -1,0 +1,188 @@
+<!-- Bank Module v4 - Clean and Simple Interface -->
+<div id="bankModal" class="bank-modal" style="display: none;">
+    <div class="bank-modal-content">
+        <!-- Header -->
+        <div class="bank-modal-header">
+            <div class="bank-header-left">
+                <div class="bank-icon">🏦</div>
+                <h2 class="bank-modal-title">Банковские операции <span style="color: #ff6b6b; font-size: 12px; font-weight: normal;">[v4-DEBUG]</span></h2>
+            </div>
+            <button class="bank-modal-close" onclick="closeBankV4()">&times;</button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="bank-modal-body">
+            <!-- Left Column - Financial Summary -->
+            <div class="bank-info-column">
+                <!-- Bank Status -->
+                <div class="bank-status-section">
+                    <div class="bank-status-header">
+                        <div class="bank-icon-small">🏦</div>
+                        <span class="bank-status-label">Банк</span>
+                        <span class="bank-status-badge active">Активен</span>
+                    </div>
+                </div>
+                
+                <!-- Current Balance -->
+                <div class="balance-section">
+                    <div class="current-balance" id="currentBalance">$0</div>
+                    <div class="balance-label">Доступно для операций</div>
+                </div>
+                
+                <!-- Financial Summary -->
+                <div class="financial-summary">
+                    <div class="summary-item income">
+                        <div class="summary-icon">📈</div>
+                        <span class="summary-label">Доход:</span>
+                        <span class="summary-value" id="totalIncome">$0</span>
+                    </div>
+                    <div class="summary-item expenses">
+                        <div class="summary-icon">📉</div>
+                        <span class="summary-label">Расходы:</span>
+                        <span class="summary-value" id="totalExpenses">$0</span>
+                    </div>
+                    <div class="summary-item payday">
+                        <div class="summary-icon">💰</div>
+                        <span class="summary-label">PAYDAY:</span>
+                        <span class="summary-value" id="monthlyIncome">$0/мес</span>
+                    </div>
+                </div>
+                
+                <!-- Credit Section -->
+                <div class="credit-section">
+                    <div class="credit-info">
+                        <div class="credit-item">
+                            <div class="credit-icon">📄</div>
+                            <span class="credit-label">Кредит:</span>
+                            <span class="credit-value" id="currentCredit">$0</span>
+                        </div>
+                        <div class="credit-item">
+                            <span class="credit-label">Макс. кредит:</span>
+                            <span class="credit-value" id="maxCredit">$0</span>
+                        </div>
+                    </div>
+                    <div class="credit-buttons">
+                        <button class="credit-btn payoff" onclick="payoffCreditV4()" id="payoffBtn">
+                            ✓ ПОГАСИТЬ
+                        </button>
+                        <button class="credit-btn take" onclick="requestCreditV4(1000)" id="takeCreditBtn">
+                            📄 ВЗЯТЬ
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Operations -->
+            <div class="operations-column">
+                <!-- Transfer Form -->
+                <div class="transfer-section">
+                    <h3 class="section-title">Перевод средств</h3>
+                    <form id="transferForm" class="transfer-form" onsubmit="event.preventDefault(); processTransferV4();">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recipientSelect" class="form-label">Получатель</label>
+                                <select id="recipientSelect" class="form-select">
+                                    <option value="">Выберите получателя</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transferAmount" class="form-label">Сумма ($)</label>
+                                <div class="amount-input-wrapper">
+                                    <div class="amount-icon">💰</div>
+                                    <input type="number" id="transferAmount" class="form-input amount-input" placeholder="0" min="1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="transfer-btn primary">✈️ ВЫПОЛНИТЬ ПЕРЕВОД</button>
+                            <button type="button" class="transfer-btn secondary" onclick="resetTransferFormV4()">СБРОСИТЬ</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Operations History -->
+                <div class="history-section">
+                    <div class="section-header">
+                        <h3 class="section-title">История операций</h3>
+                        <div class="history-badge">
+                            <div class="history-icon">🕐</div>
+                            <span class="history-count" id="historyCount">0</span>
+                        </div>
+                    </div>
+                    <div class="transfers-history" id="transfersHistory">
+                        <!-- История операций будет загружена динамически -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Функции для работы с формой перевода
+function processTransferV4() {
+    const recipientSelect = document.getElementById('recipientSelect');
+    const amountInput = document.getElementById('transferAmount');
+    
+    const recipientIndex = parseInt(recipientSelect.value);
+    const amount = parseInt(amountInput.value);
+    
+    if (!recipientIndex || !amount) {
+        alert('Пожалуйста, выберите получателя и укажите сумму');
+        return;
+    }
+    
+    transferMoneyV4(recipientIndex, amount).then(success => {
+        if (success) {
+            resetTransferFormV4();
+            alert('Перевод выполнен успешно!');
+        }
+    });
+}
+
+function resetTransferFormV4() {
+    // Очищаем только сумму, оставляем получателя
+    document.getElementById('transferAmount').value = '';
+}
+
+// Инициализация списка получателей
+function initRecipientsList() {
+    const select = document.getElementById('recipientSelect');
+    const players = window.players || [];
+    const currentUserId = bankModuleV4?.userId;
+    const currentPlayerName = bankModuleV4?.playerName;
+    
+    select.innerHTML = '<option value="">Выберите получателя</option>';
+    
+    players.forEach((player, index) => {
+        const playerId = player.user_id || player.userId;
+        const playerName = player.name || player.username || `Игрок ${index + 1}`;
+
+        const isSameById = currentUserId && playerId && String(playerId) === String(currentUserId);
+        const isSameByName = currentPlayerName && playerName === currentPlayerName;
+
+        if (isSameById || isSameByName) {
+            return;
+        }
+
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = playerName;
+        select.appendChild(option);
+    });
+}
+
+// Обновление счетчика истории
+function updateHistoryCount() {
+    const count = document.getElementById('transfersHistory').children.length;
+    const countEl = document.getElementById('historyCount');
+    if (countEl) {
+        countEl.textContent = count;
+    }
+}
+
+// Инициализация при загрузке DOM
+document.addEventListener('DOMContentLoaded', () => {
+    initRecipientsList();
+});
+</script>

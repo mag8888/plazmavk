@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор мечты — Game Board v2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(circle at 15% 20%, rgba(0, 234, 255, 0.18) 0%, transparent 55%),
+                        radial-gradient(circle at 78% 82%, rgba(255, 0, 128, 0.18) 0%, transparent 55%),
+                        linear-gradient(150deg, #0c1424 0%, #181f32 50%, #0a101f 100%);
+            color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .dream-container {
+            width: 100%;
+            max-width: 1200px;
+            background: linear-gradient(160deg, #151d30 0%, #111527 45%, #0f1422 100%);
+            border-radius: 32px;
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(255, 255, 255, 0.04);
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dream-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .dream-title {
+            font-size: 36px;
+            font-weight: 900;
+            color: #ffd15a;
+            text-shadow: 0 0 20px rgba(255, 196, 0, 0.55);
+            margin-bottom: 12px;
+        }
+
+        .dream-subtitle {
+            font-size: 18px;
+            color: #a0a0a0;
+            margin-bottom: 8px;
+        }
+
+        .room-info {
+            font-size: 16px;
+            color: #00ff96;
+            font-weight: 600;
+        }
+
+        .dreams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .dream-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dream-card:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+            border-color: rgba(255, 107, 107, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(255, 107, 107, 0.2);
+        }
+
+        .dream-card.selected {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 107, 107, 0.1) 100%);
+            border-color: #ff6b6b;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .dream-card.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .dream-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .dream-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .dream-description {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .dream-cost {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff6b6b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cost-icon {
+            font-size: 16px;
+        }
+
+        .selected-dream {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 107, 107, 0.05) 100%);
+            border: 2px solid #ff6b6b;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .selected-dream-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff6b6b;
+            margin-bottom: 12px;
+        }
+
+        .selected-dream-details {
+            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .selected-dream-cost {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffd15a;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #06b973 0%, #00d4aa 100%);
+            color: #1a1d24;
+            box-shadow: 0 8px 24px rgba(6, 185, 115, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #059669 0%, #00b894 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(6, 185, 115, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffd15a;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #06b973 0%, #00d4aa 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff3b3b 100%);
+        }
+
+        @media (max-width: 768px) {
+            .dream-container {
+                padding: 24px;
+                margin: 16px;
+            }
+
+            .dream-title {
+                font-size: 28px;
+            }
+
+            .dreams-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .dream-card {
+                padding: 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dream-container">
+        <div class="dream-header">
+            <h1 class="dream-title">🌟 ВЫБОР МЕЧТЫ</h1>
+            <p class="dream-subtitle">Выберите мечту, которую хотите воплотить в жизнь</p>
+            <div class="room-info" id="roomInfo">Комната: Загрузка...</div>
+        </div>
+
+        <div class="stats-section">
+            <h3 class="stats-title">📊 Статистика мечт</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalDreams">0</div>
+                    <div class="stat-label">Всего мечт</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgCost">$0</div>
+                    <div class="stat-label">Средняя стоимость</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="minCost">$0</div>
+                    <div class="stat-label">Минимальная стоимость</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="maxCost">$0</div>
+                    <div class="stat-label">Максимальная стоимость</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="selected-dream" id="selectedDreamSection" style="display: none;">
+            <h3 class="selected-dream-title">✨ Выбранная мечта</h3>
+            <div class="selected-dream-details" id="selectedDreamName"></div>
+            <div class="selected-dream-cost" id="selectedDreamCost"></div>
+        </div>
+
+        <div class="dreams-grid" id="dreamsGrid">
+            <!-- Мечты будут загружены динамически -->
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="confirmSelection" onclick="confirmDreamSelection()" disabled>
+                <span>✅</span>
+                Подтвердить выбор
+            </button>
+            <button class="btn btn-secondary" id="randomDream" onclick="selectRandomDream()">
+                <span>🎲</span>
+                Случайная мечта
+            </button>
+            <button class="btn btn-secondary" onclick="closeDreamSelection()">
+                <span>❌</span>
+                Отмена
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Получение данных пользователя и комнаты
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const currentRoom = JSON.parse(localStorage.getItem('currentRoom') || '{}');
+
+        let selectedDream = null;
+        let dreamsData = [];
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, что пользователь в комнате
+            if (!currentRoom.id) {
+                showNotification('Вы не находитесь в комнате', 'error');
+                setTimeout(() => {
+                    window.location.href = 'lobby.html';
+                }, 2000);
+                return;
+            }
+
+            // Обновляем информацию о комнате
+            document.getElementById('roomInfo').textContent = `Комната: ${currentRoom.name}`;
+            
+            // Загружаем мечты
+            loadDreams();
+            updateStats();
+        });
+
+        async function loadDreams() {
+            try {
+                // Загружаем данные мечт (в реальном проекте это будет API)
+                const response = await fetch('/api/dreams');
+                if (response.ok) {
+                    dreamsData = await response.json();
+                } else {
+                    // Fallback данные мечт
+                    dreamsData = getFallbackDreams();
+                }
+                
+                renderDreams();
+                updateStats();
+            } catch (error) {
+                console.error('Ошибка загрузки мечт:', error);
+                dreamsData = getFallbackDreams();
+                renderDreams();
+                updateStats();
+            }
+        }
+
+        function getFallbackDreams() {
+            return [
+                { id: 2, name: 'Дом мечты', description: 'Построить дом мечты для семьи', cost: 100000, icon: '🏠' },
+                { id: 6, name: 'Антарктида', description: 'Посетить Антарктиду', cost: 150000, icon: '🧊' },
+                { id: 14, name: 'Высочайшие вершины', description: 'Подняться на все высочайшие вершины мира', cost: 500000, icon: '🏔️' },
+                { id: 16, name: 'Книга-бестселлер', description: 'Стать автором книги-бестселлера', cost: 300000, icon: '📚' },
+                { id: 20, name: 'Яхта в Средиземном море', description: 'Жить год на яхте в Средиземном море', cost: 300000, icon: '⛵' },
+                { id: 22, name: 'Мировой фестиваль', description: 'Организовать мировой фестиваль', cost: 200000, icon: '🎪' },
+                { id: 26, name: 'Ретрит-центр', description: 'Построить ретрит-центр', cost: 500000, icon: '🕯️' },
+                { id: 27, name: 'Фонд поддержки талантов', description: 'Создать фонд поддержки талантов', cost: 300000, icon: '🎭' },
+                { id: 28, name: 'Кругосветное плавание', description: 'Кругосветное плавание на паруснике', cost: 200000, icon: '⛵' },
+                { id: 30, name: 'Кругосветное плавание 2', description: 'Кругосветное плавание на паруснике', cost: 300000, icon: '⛵' },
+                { id: 32, name: 'Частный самолёт', description: 'Купить частный самолёт', cost: 1000000, icon: '✈️' },
+                { id: 36, name: 'Коллекция суперкаров', description: 'Купить коллекцию суперкаров', cost: 1000000, icon: '🏎️' },
+                { id: 38, name: 'Полнометражный фильм', description: 'Снять полнометражный фильм', cost: 500000, icon: '🎬' },
+                { id: 40, name: 'Мировой лидер мнений', description: 'Стать мировым лидером мнений', cost: 1000000, icon: '👑' },
+                { id: 42, name: 'Белоснежная яхта', description: 'Белоснежная Яхта', cost: 300000, icon: '⛵' },
+                { id: 44, name: 'Полёт в космос', description: 'Полёт в космос', cost: 250000, icon: '🚀' }
+            ];
+        }
+
+        function renderDreams() {
+            const grid = document.getElementById('dreamsGrid');
+            grid.innerHTML = '';
+
+            dreamsData.forEach(dream => {
+                const dreamCard = document.createElement('div');
+                dreamCard.className = 'dream-card';
+                dreamCard.onclick = () => selectDream(dream);
+
+                dreamCard.innerHTML = `
+                    <div class="dream-icon">${dream.icon}</div>
+                    <div class="dream-name">${dream.name}</div>
+                    <div class="dream-description">${dream.description}</div>
+                    <div class="dream-cost">
+                        <span class="cost-icon">💰</span>
+                        $${dream.cost.toLocaleString()}
+                    </div>
+                `;
+
+                grid.appendChild(dreamCard);
+            });
+        }
+
+        function selectDream(dream) {
+            selectedDream = dream;
+            
+            // Обновляем UI
+            document.querySelectorAll('.dream-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            event.currentTarget.classList.add('selected');
+            
+            // Показываем выбранную мечту
+            document.getElementById('selectedDreamSection').style.display = 'block';
+            document.getElementById('selectedDreamName').textContent = dream.name;
+            document.getElementById('selectedDreamCost').textContent = `$${dream.cost.toLocaleString()}`;
+            
+            // Активируем кнопку подтверждения
+            document.getElementById('confirmSelection').disabled = false;
+        }
+
+        function selectRandomDream() {
+            const randomIndex = Math.floor(Math.random() * dreamsData.length);
+            const randomDream = dreamsData[randomIndex];
+            
+            // Находим карточку и кликаем по ней
+            const cards = document.querySelectorAll('.dream-card');
+            if (cards[randomIndex]) {
+                cards[randomIndex].click();
+                showNotification('Случайная мечта выбрана!', 'success');
+            }
+        }
+
+        function confirmDreamSelection() {
+            if (!selectedDream) {
+                showNotification('Выберите мечту', 'error');
+                return;
+            }
+
+            // Сохраняем выбранную мечту
+            localStorage.setItem('selectedDream', JSON.stringify(selectedDream));
+            
+            // Отправляем на сервер (в реальном проекте)
+            saveDreamToServer(selectedDream);
+            
+            showNotification('Мечта успешно выбрана!', 'success');
+            
+            // Закрываем окно через 2 секунды
+            setTimeout(() => {
+                window.close();
+            }, 2000);
+        }
+
+        async function saveDreamToServer(dream) {
+            try {
+                const response = await fetch('/api/room/select-dream', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        roomId: currentRoom.id,
+                        dream: dream
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('Мечта сохранена на сервере');
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения мечты:', error);
+            }
+        }
+
+        function closeDreamSelection() {
+            if (confirm('Вы уверены, что хотите отменить выбор мечты?')) {
+                window.close();
+            }
+        }
+
+        function updateStats() {
+            if (dreamsData.length === 0) return;
+
+            const costs = dreamsData.map(dream => dream.cost);
+            const totalDreams = dreamsData.length;
+            const avgCost = Math.round(costs.reduce((sum, cost) => sum + cost, 0) / totalDreams);
+            const minCost = Math.min(...costs);
+            const maxCost = Math.max(...costs);
+
+            document.getElementById('totalDreams').textContent = totalDreams;
+            document.getElementById('avgCost').textContent = `$${avgCost.toLocaleString()}`;
+            document.getElementById('minCost').textContent = `$${minCost.toLocaleString()}`;
+            document.getElementById('maxCost').textContent = `$${maxCost.toLocaleString()}`;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

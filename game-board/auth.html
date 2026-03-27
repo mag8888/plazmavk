@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Авторизация - Game Board v2.0 - Богатый дизайн</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* БОГАТЫЙ СОВРЕМЕННЫЙ ДИЗАЙН v4.0 - БАНКОВСКИЙ СТИЛЬ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1d24 0%, #242830 50%, #1a1d24 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 150, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 100, 200, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(100, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00ff96, #00bfff, #ff6b6b, #ffd93d);
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 12px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-header p {
+            font-size: 16px;
+            color: #a0a0a0;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #ffffff;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder {
+            color: #a0a0a0;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ff96;
+            box-shadow: 0 0 0 3px rgba(0, 255, 150, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group input.error {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+            box-shadow: 0 8px 32px rgba(0, 255, 150, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 12px 40px rgba(0, 255, 150, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #00bfff 0%, #0099cc 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 32px rgba(0, 191, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 12px 40px rgba(0, 191, 255, 0.4);
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .auth-links a {
+            color: #00ff96;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .auth-links a:hover {
+            color: #00d4aa;
+            text-shadow: 0 0 8px rgba(0, 255, 150, 0.5);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 71, 87, 0.05) 100%);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #ff6b6b;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.1) 0%, rgba(0, 212, 170, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 150, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #00ff96;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-container {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95) 0%, rgba(36, 40, 48, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 16px;
+            z-index: 1000;
+        }
+
+        .mobile-nav-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+        }
+
+        .mobile-nav-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            text-decoration: none;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mobile-nav-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.2) 0%, rgba(0, 212, 170, 0.1) 100%);
+            border-color: rgba(0, 255, 150, 0.5);
+        }
+
+        .mobile-nav-btn.active {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 20px;
+                padding: 32px 24px;
+                padding-bottom: 80px;
+            }
+
+            .auth-header h1 {
+                font-size: 28px;
+            }
+
+            .mobile-nav {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>🔐 Авторизация</h1>
+            <p>Войдите в систему Game Board v2.0</p>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+        <div class="success-message" id="success-message"></div>
+
+        <form id="auth-form">
+            <div class="form-group">
+                <label for="username">Email</label>
+                <input type="email" id="username" name="username" placeholder="Введите email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" placeholder="Введите пароль" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">🚀 Войти в игру</button>
+        </form>
+
+        <div class="auth-links">
+            <a href="lobby.html">Продолжить без авторизации</a>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-buttons">
+            <a href="index.html" class="mobile-nav-btn">
+                <span>🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="lobby.html" class="mobile-nav-btn">
+                <span>🎮</span>
+                <span>Лобби</span>
+            </a>
+            <a href="game.html" class="mobile-nav-btn">
+                <span>🎯</span>
+                <span>Игра</span>
+            </a>
+            <a href="auth.html" class="mobile-nav-btn active">
+                <span>👤</span>
+                <span>Профиль</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('auth-form');
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // Скрыть предыдущие сообщения
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+
+                // Простая валидация
+                if (username.length < 5 || !username.includes('@')) {
+                    showError('Введите корректный email адрес');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showError('Пароль должен содержать минимум 6 символов');
+                    return;
+                }
+
+                // Реальная авторизация через API
+                fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: username, // Используем username как email для тестирования
+                        password: password
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('🔍 Auth: Full response data:', data);
+                    console.log('🔍 Auth: data.user:', data.user);
+                    
+                    if (data.accessToken) {
+                        // Извлекаем userId из ответа
+                        const userId = data.user?.id;
+                        
+                        // Проверяем, что userId существует
+                        if (!userId) {
+                            console.error('❌ Auth: No user ID in response!');
+                            showError('Ошибка: не получен ID пользователя');
+                            return;
+                        }
+                        
+                        // Сохраняем токен и данные пользователя
+                        localStorage.setItem('authToken', data.accessToken);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        localStorage.setItem('userId', userId);
+                        localStorage.setItem('isAuthenticated', 'true');
+                        
+                        console.log('🔍 Auth: Saved userId:', userId);
+                        console.log('🔍 Auth: Saved user:', data.user);
+                        console.log('🔍 Auth: All localStorage keys:', Object.keys(localStorage));
+                        
+                        showSuccess('Авторизация успешна! Переход в лобби...');
+                        
+                        // Переход в лобби через 2 секунды
+                        setTimeout(() => {
+                            console.log('🔍 Auth: Redirecting to lobby.html...');
+                            console.log('🔍 Auth: Final localStorage check:', {
+                                userId: localStorage.getItem('userId'),
+                                user: localStorage.getItem('user'),
+                                isAuthenticated: localStorage.getItem('isAuthenticated')
+                            });
+                            window.location.href = 'lobby.html';
+                        }, 2000);
+                    } else {
+                        showError(data.message || 'Ошибка авторизации');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка авторизации:', error);
+                    showError('Ошибка подключения к серверу');
+                });
+            });
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+
+            function showSuccess(message) {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+            }
+
+            // Проверить, если пользователь уже авторизован
+            if (localStorage.getItem('userId') && localStorage.getItem('isAuthenticated') === 'true') {
+                showSuccess('Вы уже авторизованы! Переход в лобби...');
+                setTimeout(() => {
+                    window.location.href = 'lobby.html';
+                }, 1500);
+            }
+        });
+    </script>
+</body>
+</html>

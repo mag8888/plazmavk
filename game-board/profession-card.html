@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карточка профессии - Game Board v2.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at 15% 20%, rgba(0, 234, 255, 0.18) 0%, transparent 55%),
+                        radial-gradient(circle at 78% 82%, rgba(255, 0, 128, 0.18) 0%, transparent 55%),
+                        linear-gradient(150deg, #0c1424 0%, #181f32 50%, #0a101f 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .profession-card {
+            background: linear-gradient(160deg, #151d30 0%, #111527 45%, #0f1422 100%);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profession-card::before {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border-radius: 16px;
+            background: radial-gradient(circle at 50% 42%, rgba(255, 205, 64, 0.12) 0%, transparent 60%),
+                        linear-gradient(200deg, rgba(32, 48, 78, 0.7) 0%, rgba(16, 22, 34, 0.95) 62%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .profession-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 24px rgba(255, 71, 87, 0.3);
+        }
+
+        .profession-info h1 {
+            font-size: 28px;
+            font-weight: 900;
+            color: #ffd15a;
+            text-shadow: 0 0 20px rgba(255, 196, 0, 0.55);
+            margin-bottom: 4px;
+        }
+
+        .profession-info p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .financial-summary {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .summary-item.income {
+            border-color: rgba(22, 247, 158, 0.3);
+            background: linear-gradient(135deg, rgba(22, 247, 158, 0.1) 0%, rgba(22, 247, 158, 0.05) 100%);
+        }
+
+        .summary-item.expenses {
+            border-color: rgba(255, 179, 71, 0.3);
+            background: linear-gradient(135deg, rgba(255, 179, 71, 0.1) 0%, rgba(255, 179, 71, 0.05) 100%);
+        }
+
+        .summary-item.cashflow {
+            grid-column: 1 / -1;
+            border-color: rgba(22, 247, 158, 0.4);
+            background: linear-gradient(135deg, rgba(22, 247, 158, 0.15) 0%, rgba(22, 247, 158, 0.08) 100%);
+        }
+
+        .summary-amount {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+
+        .summary-amount.income {
+            color: #16f79e;
+            text-shadow: 0 0 12px rgba(22, 247, 158, 0.4);
+        }
+
+        .summary-amount.expenses {
+            color: #ffb347;
+            text-shadow: 0 0 12px rgba(255, 179, 71, 0.4);
+        }
+
+        .summary-amount.cashflow {
+            color: #16f79e;
+            text-shadow: 0 0 16px rgba(22, 247, 158, 0.5);
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .liabilities-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .liabilities-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+        }
+
+        .liability-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .liability-item:last-child {
+            border-bottom: none;
+        }
+
+        .liability-name {
+            font-size: 14px;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .liability-amount {
+            font-size: 14px;
+            font-weight: 700;
+            color: #a8a8ff;
+        }
+
+        .liability-amount.principal {
+            color: #ff7ce3;
+        }
+
+        .total-liabilities {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            margin-top: 16px;
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+            font-weight: 700;
+        }
+
+        .total-label {
+            font-size: 16px;
+            color: #ffffff;
+        }
+
+        .total-amount {
+            font-size: 18px;
+            color: #ff7ce3;
+            font-weight: 900;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-business {
+            background: linear-gradient(135deg, #ffb347 0%, #ff8c42 100%);
+            color: #2f2600;
+            box-shadow: 0 14px 26px rgba(255, 140, 66, 0.35);
+        }
+
+        .btn-business:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(255, 140, 66, 0.5);
+        }
+
+        .btn-complex {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff3b3b 100%);
+            color: #ffffff;
+            box-shadow: 0 14px 26px rgba(255, 59, 59, 0.35);
+        }
+
+        .btn-pay-all {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-pay-all:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.5);
+        }
+
+        .liability-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .liability-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .liability-info {
+            flex: 1;
+        }
+
+        .liability-payoff {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .btn-pay-off {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-pay-off:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+        }
+
+        .btn-pay-off:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .profession-card {
+                padding: 24px;
+                margin: 10px;
+            }
+
+            .summary-row {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .summary-item.cashflow {
+                grid-column: 1;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .liabilities-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profession-card">
+        <button class="close-btn" onclick="closeProfessionCard()">✕</button>
+        
+        <div class="card-header">
+            <div class="profession-icon">🚀</div>
+            <div class="profession-info">
+                <h1>Предприниматель</h1>
+                <p>Владелец бизнеса</p>
+            </div>
+        </div>
+
+        <div class="financial-summary">
+            <div class="summary-row">
+                <div class="summary-item income">
+                    <div class="summary-amount income" id="currentIncome">$10,000</div>
+                    <div class="summary-label">Зарплата</div>
+                </div>
+                <div class="summary-item expenses">
+                    <div class="summary-amount expenses" id="currentExpenses">$6,200</div>
+                    <div class="summary-label">Расходы</div>
+                </div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-item cashflow">
+                    <div class="summary-amount cashflow" id="currentCashflow">$3,800</div>
+                    <div class="summary-label">Денежный поток</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="liabilities-section">
+            <div class="section-title">
+                <span>💳</span>
+                <span>Обязательства</span>
+            </div>
+            
+            <div class="liabilities-grid" id="liabilitiesList">
+                <div class="liability-item">
+                    <div class="liability-info">
+                        <span class="liability-name">Налоги: <span id="taxesAmount">$1,300</span> (<span id="taxesPercent">13%</span>)</span>
+                    </div>
+                    <button class="btn-pay-off" onclick="payOffLiability('taxes', 0)" disabled>Погасить</button>
+                </div>
+                <div class="liability-item">
+                    <div class="liability-info">
+                        <span class="liability-name">Прочие расходы: <span id="otherExpenses">$1,500</span></span>
+                    </div>
+                    <button class="btn-pay-off" onclick="payOffLiability('other', 0)" disabled>Погасить</button>
+                </div>
+                <div class="liability-item">
+                    <div class="liability-info">
+                        <span class="liability-name">Кредит на авто: <span id="carLoanPayment">$700</span></span>
+                    </div>
+                    <div class="liability-payoff">
+                        <span class="liability-amount principal"><span id="carLoanPrincipal">$14,000</span> (тело)</span>
+                        <button class="btn-pay-off" onclick="payOffLiability('carLoan', 14000)">Погасить</button>
+                    </div>
+                </div>
+                <div class="liability-item">
+                    <div class="liability-info">
+                        <span class="liability-name">Образовательный кредит: <span id="educationLoanPayment">$500</span></span>
+                    </div>
+                    <div class="liability-payoff">
+                        <span class="liability-amount principal"><span id="educationLoanPrincipal">$10,000</span> (тело)</span>
+                        <button class="btn-pay-off" onclick="payOffLiability('educationLoan', 10000)">Погасить</button>
+                    </div>
+                </div>
+                <div class="liability-item">
+                    <div class="liability-info">
+                        <span class="liability-name">Ипотека: <span id="mortgagePayment">$1,200</span></span>
+                    </div>
+                    <div class="liability-payoff">
+                        <span class="liability-amount principal"><span id="mortgagePrincipal">$240,000</span> (тело)</span>
+                        <button class="btn-pay-off" onclick="payOffLiability('mortgage', 240000)">Погасить</button>
+                    </div>
+                </div>
+                <div class="liability-item">
+                    <div class="liability-info">
+                        <span class="liability-name">Кредитные карты: <span id="creditCardsPayment">$1,000</span></span>
+                    </div>
+                    <div class="liability-payoff">
+                        <span class="liability-amount principal"><span id="creditCardsPrincipal">$20,000</span> (тело)</span>
+                        <button class="btn-pay-off" onclick="payOffLiability('creditCards', 20000)">Погасить</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="total-liabilities">
+                <span class="total-label">Итого тело кредитов</span>
+                <span class="total-amount" id="totalLiabilities">$284,000</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-business" onclick="selectBusiness()">
+                <span>💼</span>
+                <span>Business</span>
+            </button>
+            <button class="btn btn-pay-all" onclick="payOffAllLiabilities()">
+                <span>💰</span>
+                <span>Погасить все</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Получаем данные из localStorage
+        const currentUser = localStorage.getItem('username') || 'Гость';
+        const currentRoom = JSON.parse(localStorage.getItem('currentRoom') || '{}');
+
+        function selectBusiness() {
+            // Выбираем бизнес-путь
+            console.log('Выбран бизнес-путь');
+            showNotification('Выбран бизнес-путь!', 'success');
+            
+            // Сохраняем выбор профессии
+            const professionData = {
+                type: 'business',
+                profession: 'Предприниматель',
+                income: 10000,
+                expenses: 6200,
+                cashflow: 3800,
+                liabilities: {
+                    taxes: 1300,
+                    other: 1500,
+                    carLoan: { payment: 700, principal: 14000 },
+                    educationLoan: { payment: 500, principal: 10000 },
+                    mortgage: { payment: 1200, principal: 240000 },
+                    creditCards: { payment: 1000, principal: 20000 }
+                },
+                totalLiabilities: 284000
+            };
+            
+            localStorage.setItem('selectedProfession', JSON.stringify(professionData));
+            
+            // Переходим к игре
+            setTimeout(() => {
+                window.location.href = 'game.html';
+            }, 1500);
+        }
+
+        function selectComplex() {
+            // Выбираем сложный путь
+            console.log('Выбран сложный путь');
+            showNotification('Выбран сложный путь!', 'success');
+            
+            // Сохраняем выбор профессии
+            const professionData = {
+                type: 'complex',
+                profession: 'Предприниматель',
+                income: 10000,
+                expenses: 6200,
+                cashflow: 3800,
+                liabilities: {
+                    taxes: 1300,
+                    other: 1500,
+                    carLoan: { payment: 700, principal: 14000 },
+                    educationLoan: { payment: 500, principal: 10000 },
+                    mortgage: { payment: 1200, principal: 240000 },
+                    creditCards: { payment: 1000, principal: 20000 }
+                },
+                totalLiabilities: 284000
+            };
+            
+            localStorage.setItem('selectedProfession', JSON.stringify(professionData));
+            
+            // Переходим к игре
+            setTimeout(() => {
+                window.location.href = 'game.html';
+            }, 1500);
+        }
+
+        function closeProfessionCard() {
+            // Возвращаемся в лобби
+            window.location.href = 'lobby.html';
+        }
+
+        function showNotification(message, type = 'info') {
+            // Создаем уведомление
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #16f79e 0%, #06b973 100%)' : 'linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%)'};
+                color: ${type === 'success' ? '#03110a' : '#ffffff'};
+                padding: 16px 24px;
+                border-radius: 12px;
+                font-weight: 700;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Анимация появления
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Удаление через 3 секунды
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, что пользователь в комнате
+            if (!currentRoom.id) {
+                showNotification('Вы не находитесь в комнате', 'error');
+                setTimeout(() => {
+                    window.location.href = 'lobby.html';
+                }, 2000);
+                return;
+            }
+
+            console.log('Карточка профессии загружена для пользователя:', currentUser);
+            console.log('Комната:', currentRoom.name);
+            
+            // Загружаем текущие финансовые данные
+            loadCurrentFinancialData();
+        });
+
+        function loadCurrentFinancialData() {
+            // Получаем текущие данные профессии из localStorage или загружаем с сервера
+            const savedProfession = localStorage.getItem('selectedProfession');
+            let financialData;
+            
+            if (savedProfession) {
+                financialData = JSON.parse(savedProfession);
+                console.log('Загружены сохраненные данные профессии:', financialData);
+            } else {
+                // Начальные данные профессии
+                financialData = {
+                    profession: 'Предприниматель',
+                    income: 10000,
+                    expenses: 6200,
+                    cashflow: 3800,
+                    liabilities: {
+                        taxes: 1300,
+                        other: 1500,
+                        carLoan: { payment: 700, principal: 14000 },
+                        educationLoan: { payment: 500, principal: 10000 },
+                        mortgage: { payment: 1200, principal: 240000 },
+                        creditCards: { payment: 1000, principal: 20000 }
+                    },
+                    totalLiabilities: 284000
+                };
+            }
+            
+            // Обновляем отображение
+            updateFinancialDisplay(financialData);
+        }
+
+        function updateFinancialDisplay(data) {
+            // Обновляем основные финансовые показатели
+            document.getElementById('currentIncome').textContent = `$${data.income.toLocaleString()}`;
+            document.getElementById('currentExpenses').textContent = `$${data.expenses.toLocaleString()}`;
+            document.getElementById('currentCashflow').textContent = `$${data.cashflow.toLocaleString()}`;
+            
+            // Обновляем обязательства
+            document.getElementById('taxesAmount').textContent = `$${data.liabilities.taxes.toLocaleString()}`;
+            document.getElementById('taxesPercent').textContent = `${Math.round((data.liabilities.taxes / data.income) * 100)}%`;
+            document.getElementById('otherExpenses').textContent = `$${data.liabilities.other.toLocaleString()}`;
+            
+            // Кредиты
+            document.getElementById('carLoanPayment').textContent = `$${data.liabilities.carLoan.payment.toLocaleString()}`;
+            document.getElementById('carLoanPrincipal').textContent = `$${data.liabilities.carLoan.principal.toLocaleString()}`;
+            
+            document.getElementById('educationLoanPayment').textContent = `$${data.liabilities.educationLoan.payment.toLocaleString()}`;
+            document.getElementById('educationLoanPrincipal').textContent = `$${data.liabilities.educationLoan.principal.toLocaleString()}`;
+            
+            document.getElementById('mortgagePayment').textContent = `$${data.liabilities.mortgage.payment.toLocaleString()}`;
+            document.getElementById('mortgagePrincipal').textContent = `$${data.liabilities.mortgage.principal.toLocaleString()}`;
+            
+            document.getElementById('creditCardsPayment').textContent = `$${data.liabilities.creditCards.payment.toLocaleString()}`;
+            document.getElementById('creditCardsPrincipal').textContent = `$${data.liabilities.creditCards.principal.toLocaleString()}`;
+            
+            // Общий долг
+            document.getElementById('totalLiabilities').textContent = `$${data.totalLiabilities.toLocaleString()}`;
+        }
+
+        function updateFinancialData(newData) {
+            // Обновляем данные и пересчитываем
+            const currentData = JSON.parse(localStorage.getItem('selectedProfession') || '{}');
+            const updatedData = { ...currentData, ...newData };
+            
+            // Пересчитываем денежный поток
+            updatedData.cashflow = updatedData.income - updatedData.expenses;
+            
+            // Сохраняем обновленные данные
+            localStorage.setItem('selectedProfession', JSON.stringify(updatedData));
+            
+            // Обновляем отображение
+            updateFinancialDisplay(updatedData);
+            
+            console.log('Финансовые данные обновлены:', updatedData);
+        }
+    </script>
+</body>
+</html>

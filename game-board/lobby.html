@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лобби - Game Board v2.0</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- Removed broken ICO fallback to avoid 404; SVG is used as primary favicon -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0c1445 100%);
+            color: white;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .header-info h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .header-info p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .user-balance {
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .lobby-content {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 30px;
+        }
+
+        .rooms-section {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .rooms-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .room-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .room-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #10b981;
+        }
+
+        .room-card.user-in-room {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .room-card.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .room-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .room-meta {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .room-status {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-waiting {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .status-playing {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-full {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .room-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .room-players {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .player-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .player-avatar.current-user {
+            border-color: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .empty-slot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px dashed rgba(148, 163, 184, 0.4);
+        }
+
+        .room-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .join-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .join-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .join-btn:disabled {
+            background: rgba(55, 65, 81, 0.6);
+            color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .join-btn.in-room {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .create-room-btn,
+        .quick-join-btn {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .create-room-btn:hover,
+        .quick-join-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+        }
+
+        .stats-section {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+        }
+
+        .stat-value {
+            font-weight: 600;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            width: min(480px, 100%);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            font-size: 14px;
+            transition: border 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.3);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .profession-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .profession-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profession-card.selected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .lobby-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .controls-section {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .create-room-btn,
+            .quick-join-btn {
+                flex: 1 1 45%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .user-section {
+                flex-direction: column;
+            }
+
+            .controls-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">🎲</div>
+                <div class="header-info">
+                    <h1>Game Board v2.0</h1>
+                    <p>Онлайн-лобби</p>
+                </div>
+            </div>
+            <div class="user-section">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Игрок</div>
+                    <div class="user-balance" id="userBalance">$10,000</div>
+                </div>
+                <button class="logout-btn" type="button">Выйти</button>
+            </div>
+        </div>
+
+        <div class="lobby-content">
+            <div class="rooms-section">
+                <div class="section-header">
+                    <h2 class="section-title">Доступные комнаты</h2>
+                    <button class="refresh-btn" type="button">🔄 Обновить</button>
+                </div>
+                <div class="rooms-list" id="roomsList"></div>
+            </div>
+
+            <div class="controls-section">
+                <button class="create-room-btn" type="button">➕ Создать комнату</button>
+                <button class="quick-join-btn" type="button">⚡ Быстрое присоединение</button>
+
+                <div class="stats-section">
+                    <div class="stats-title">Статистика</div>
+                    <div class="stat-item">
+                        <span class="stat-label">Всего игр:</span>
+                        <span class="stat-value" id="totalGames">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Побед:</span>
+                        <span class="stat-value" id="totalWins">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Уровень:</span>
+                        <span class="stat-value" id="userLevel">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Онлайн игроков:</span>
+                        <span class="stat-value" id="onlinePlayers">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="createRoomModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Создать комнату</h3>
+                <button class="close-btn" type="button">&times;</button>
+            </div>
+
+            <div class="error-message" id="createRoomError"></div>
+
+            <form id="createRoomForm">
+                <div class="form-group">
+                    <label class="form-label">Название комнаты</label>
+                    <input type="text" class="form-input" id="roomName" placeholder="Введите название комнаты" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Профессия</label>
+                    <div class="profession-cards">
+                        <div class="profession-card selected" data-profession="entrepreneur">
+                            <div class="profession-icon">🚀</div>
+                            <div class="profession-name">Предприниматель</div>
+                            <div class="profession-description">Владелец бизнеса</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Максимальное количество игроков</label>
+                    <select class="form-select" id="maxPlayers" required>
+                        <option value="2">2 игрока</option>
+                        <option value="3">3 игрока</option>
+                        <option value="4" selected>4 игрока</option>
+                        <option value="5">5 игроков</option>
+                        <option value="6">6 игроков</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Время на ход (минуты)</label>
+                    <select class="form-select" id="turnTime" required>
+                        <option value="1">1 минута</option>
+                        <option value="2" selected>2 минуты</option>
+                        <option value="3">3 минуты</option>
+                        <option value="4">4 минуты</option>
+                        <option value="5">5 минут</option>
+                    </select>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" class="checkbox" id="assignProfessions" checked>
+                    <label class="checkbox-label" for="assignProfessions">Назначить профессии всем игрокам</label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Пароль комнаты (необязательно)</label>
+                    <input type="password" class="form-input" id="roomPassword" placeholder="Введите пароль для закрытой комнаты">
+                </div>
+
+                <div class="loading" id="createRoomLoading">
+                    <div class="spinner"></div>
+                    <div>Создание комнаты...</div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать комнату</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="joinRoomModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Присоединиться к комнате</h3>
+                <button class="close-btn" type="button">&times;</button>
+            </div>
+
+            <div class="error-message" id="joinRoomError"></div>
+
+            <div id="joinRoomContent">
+                <div class="form-group">
+                    <label class="form-label">Введите пароль комнаты (если требуется)</label>
+                    <input type="password" class="form-input" id="joinRoomPassword" placeholder="Пароль комнаты">
+                </div>
+
+                <div class="loading" id="joinRoomLoading">
+                    <div class="spinner"></div>
+                    <div>Присоединение к комнате...</div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary">Отмена</button>
+                    <button type="button" class="btn btn-primary">Присоединиться</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/assets/js/modules/lobby/index.js?v=3&t=1737521862"></script>
+</body>
+</html>

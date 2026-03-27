@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лобби - Game Board v2.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1d24 25%, #242830 50%, #1a1d24 75%, #0f1419 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 150, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 100, 200, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(100, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 12px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .lobby-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .rooms-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rooms-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.03) 0%, rgba(0, 191, 255, 0.02) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .rooms-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .rooms-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+            box-shadow: 0 8px 32px rgba(0, 255, 150, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 255, 150, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+        }
+
+        .create-room-form {
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95) 0%, rgba(36, 40, 48, 0.9) 100%);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder {
+            color: #a0a0a0;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ff96;
+            box-shadow: 0 0 0 3px rgba(0, 255, 150, 0.2);
+        }
+
+        .rooms-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .room-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .room-item:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.1) 0%, rgba(0, 255, 150, 0.05) 100%);
+            border-color: rgba(0, 255, 150, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .room-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .room-status {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .room-status.waiting {
+            background: linear-gradient(135deg, #ffd93d 0%, #ffb347 100%);
+            color: #1a1d24;
+        }
+
+        .room-status.full {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: #ffffff;
+        }
+
+        .room-status.playing {
+            background: linear-gradient(135deg, #00bfff 0%, #0099cc 100%);
+            color: #ffffff;
+        }
+
+        .room-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+
+        .room-players {
+            display: flex;
+            gap: 4px;
+        }
+
+        .player-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1d24;
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95) 0%, rgba(36, 40, 48, 0.9) 100%);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-title .icon {
+            font-size: 18px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.1) 0%, rgba(0, 255, 150, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 150, 0.2);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1d24;
+        }
+
+        .user-details h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .user-details p {
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #00ff96;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95) 0%, rgba(36, 40, 48, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 16px;
+            z-index: 1000;
+        }
+
+        .mobile-nav-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+        }
+
+        .mobile-nav-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            text-decoration: none;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mobile-nav-btn.active {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+        }
+
+        @media (max-width: 768px) {
+            .lobby-content {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .sidebar {
+                position: static;
+                order: -1;
+            }
+
+            .rooms-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Лобби</h1>
+            <p>Выберите комнату или создайте новую игру</p>
+        </div>
+
+        <div class="lobby-content">
+            <div class="rooms-section">
+                <div class="rooms-header">
+                    <h2 class="rooms-title">Доступные комнаты</h2>
+                    <button class="btn btn-primary" id="refresh-rooms">🔄 Обновить</button>
+                </div>
+
+                <div class="create-room-form">
+                    <h3 style="margin-bottom: 16px; color: #ffffff; font-size: 16px;">Создать комнату</h3>
+                    <div class="form-group">
+                        <label for="room-name">Название комнаты</label>
+                        <input type="text" id="room-name" placeholder="Введите название комнаты">
+                    </div>
+                    <div class="form-group">
+                        <label for="max-players">Максимум игроков</label>
+                        <input type="number" id="max-players" value="4" min="2" max="8">
+                    </div>
+                    <button class="btn btn-primary" id="create-room" style="width: 100%;">🏠 Создать комнату</button>
+                </div>
+
+                <div class="rooms-list" id="rooms-list">
+                    <!-- Комнаты будут загружены динамически -->
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">
+                        <span class="icon">👤</span>
+                        <span>Профиль</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar" id="user-avatar">U</div>
+                        <div class="user-details">
+                            <h3 id="username">Пользователь</h3>
+                            <p>Онлайн</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">
+                        <span class="icon">📊</span>
+                        <span>Статистика</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="games-played">0</div>
+                            <div class="stat-label">Игр сыграно</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="games-won">0</div>
+                            <div class="stat-label">Побед</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="win-rate">0%</div>
+                            <div class="stat-label">Процент побед</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-players">1</div>
+                            <div class="stat-label">Игроков онлайн</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">
+                        <span class="icon">⚙️</span>
+                        <span>Настройки</span>
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;">🔧 Настройки</button>
+                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;">📖 Правила</button>
+                    <button class="btn btn-secondary" style="width: 100%;" id="logout-btn">🚪 Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-nav">
+        <div class="mobile-nav-buttons">
+            <a href="index.html" class="mobile-nav-btn">
+                <span>🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="new-lobby.html" class="mobile-nav-btn active">
+                <span>🎮</span>
+                <span>Лобби</span>
+            </a>
+            <a href="game.html" class="mobile-nav-btn">
+                <span>🎯</span>
+                <span>Игра</span>
+            </a>
+            <a href="auth.html" class="mobile-nav-btn">
+                <span>👤</span>
+                <span>Профиль</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем авторизацию
+            const username = localStorage.getItem('username') || 'Гость';
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+
+            // Обновляем информацию пользователя
+            document.getElementById('username').textContent = username;
+            document.getElementById('user-avatar').textContent = username.charAt(0).toUpperCase();
+
+            // Если не авторизован, предлагаем войти
+            if (!isAuthenticated) {
+                if (confirm('Для игры рекомендуется войти в систему. Перейти к авторизации?')) {
+                    window.location.href = 'auth.html';
+                }
+            }
+
+            // Инициализируем комнаты
+            initRooms();
+            loadRooms();
+
+            // Обработчики событий
+            document.getElementById('create-room').addEventListener('click', createRoom);
+            document.getElementById('refresh-rooms').addEventListener('click', loadRooms);
+            document.getElementById('logout-btn').addEventListener('click', logout);
+
+            function initRooms() {
+                // Инициализируем localStorage для комнат если нужно
+                if (!localStorage.getItem('rooms')) {
+                    localStorage.setItem('rooms', JSON.stringify([]));
+                }
+            }
+
+            function loadRooms() {
+                const roomsContainer = document.getElementById('rooms-list');
+                const rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
+                
+                if (rooms.length === 0) {
+                    roomsContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #a0a0a0;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🏠</div>
+                            <div style="font-size: 16px; margin-bottom: 8px;">Нет доступных комнат</div>
+                            <div style="font-size: 14px;">Создайте новую комнату для начала игры</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                roomsContainer.innerHTML = rooms.map(room => `
+                    <div class="room-item" data-room-id="${room.id}">
+                        <div class="room-header">
+                            <div class="room-name">${room.name}</div>
+                            <div class="room-status ${room.status}">${getStatusText(room.status)}</div>
+                        </div>
+                        <div class="room-info">
+                            <div class="room-players">
+                                ${generatePlayerAvatars(room.players)}
+                            </div>
+                            <div>${room.players.length}/${room.maxPlayers} игроков</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Добавляем обработчики кликов на комнаты
+                document.querySelectorAll('.room-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const roomId = item.dataset.roomId;
+                        joinRoom(roomId);
+                    });
+                });
+            }
+
+            function generatePlayerAvatars(players) {
+                return players.map((player, index) => `
+                    <div class="player-avatar" title="${player.name}">${player.name.charAt(0).toUpperCase()}</div>
+                `).join('');
+            }
+
+            function getStatusText(status) {
+                switch (status) {
+                    case 'waiting': return 'Ожидание';
+                    case 'full': return 'Полная';
+                    case 'playing': return 'Игра';
+                    default: return 'Неизвестно';
+                }
+            }
+
+            function createRoom() {
+                const roomName = document.getElementById('room-name').value.trim();
+                const maxPlayers = parseInt(document.getElementById('max-players').value);
+
+                if (!roomName) {
+                    alert('Введите название комнаты');
+                    return;
+                }
+
+                if (maxPlayers < 2 || maxPlayers > 8) {
+                    alert('Количество игроков должно быть от 2 до 8');
+                    return;
+                }
+
+                const rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
+                const roomId = Date.now().toString();
+                
+                const newRoom = {
+                    id: roomId,
+                    name: roomName,
+                    maxPlayers: maxPlayers,
+                    players: [{ name: username, isHost: true }],
+                    status: 'waiting',
+                    createdAt: new Date().toISOString()
+                };
+
+                rooms.push(newRoom);
+                localStorage.setItem('rooms', JSON.stringify(rooms));
+                
+                // Очищаем форму
+                document.getElementById('room-name').value = '';
+                document.getElementById('max-players').value = '4';
+                
+                // Перезагружаем список комнат
+                loadRooms();
+                
+                // Присоединяемся к созданной комнате
+                joinRoom(roomId);
+            }
+
+            function joinRoom(roomId) {
+                const rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
+                const room = rooms.find(r => r.id === roomId);
+                
+                if (!room) {
+                    alert('Комната не найдена');
+                    return;
+                }
+
+                if (room.status === 'playing') {
+                    alert('Игра уже началась');
+                    return;
+                }
+
+                if (room.players.length >= room.maxPlayers) {
+                    alert('Комната заполнена');
+                    return;
+                }
+
+                // Проверяем, не находится ли пользователь уже в этой комнате
+                const existingPlayer = room.players.find(p => p.name === username);
+                if (existingPlayer) {
+                    // Пользователь уже в комнате, переходим к игре
+                    localStorage.setItem('currentRoom', JSON.stringify(room));
+                    window.location.href = 'game.html';
+                    return;
+                }
+
+                // Добавляем игрока в комнату
+                room.players.push({ name: username, isHost: false });
+                
+                // Обновляем статус комнаты
+                if (room.players.length >= room.maxPlayers) {
+                    room.status = 'full';
+                }
+
+                // Сохраняем обновленную комнату
+                const roomIndex = rooms.findIndex(r => r.id === roomId);
+                rooms[roomIndex] = room;
+                localStorage.setItem('rooms', JSON.stringify(rooms));
+                localStorage.setItem('currentRoom', JSON.stringify(room));
+
+                // Перезагружаем список комнат
+                loadRooms();
+
+                // Показываем сообщение о присоединении
+                alert(`Вы присоединились к комнате "${room.name}"`);
+            }
+
+            function logout() {
+                if (confirm('Вы уверены, что хотите выйти?')) {
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('isAuthenticated');
+                    localStorage.removeItem('currentRoom');
+                    window.location.href = 'auth.html';
+                }
+            }
+
+            // Автообновление списка комнат каждые 5 секунд
+            setInterval(loadRooms, 5000);
+        });
+    </script>
+</body>
+</html>

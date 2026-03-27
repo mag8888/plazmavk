@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест клеток - Энергия денег</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a1a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        .game-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        .game-board {
+            flex: 1;
+            background: transparent;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .board-background {
+            position: absolute;
+            width: 650px;
+            height: 650px;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
+            border-radius: 20px;
+            box-shadow: 
+                0 0 30px rgba(205, 133, 63, 0.4),
+                inset 0 0 20px rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+
+        .board-elements-container {
+            position: relative;
+            width: 950px;
+            height: 880px;
+            z-index: 2;
+        }
+
+        .outer-squares {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .outer-square {
+            position: absolute;
+            width: 58px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        .inner-squares {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            z-index: 8;
+        }
+
+        .inner-square {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            z-index: 8;
+        }
+
+        .center-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: #1a1a1a;
+            box-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.6),
+                inset 0 0 20px rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: rgba(30, 41, 59, 0.95);
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border-left: 2px solid rgba(16, 185, 129, 0.3);
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .section {
+            background: rgba(45, 55, 72, 0.8);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .section-title {
+            color: #10b981;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .roll-dice-button {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 6px 25px rgba(245, 158, 11, 0.4);
+            width: 100%;
+        }
+
+        .dice {
+            width: 40px;
+            height: 40px;
+            background: white;
+            color: #1f2937;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .status {
+            background: rgba(45, 55, 72, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        /* Цвета клеток */
+        .square-green { background: #10b981; color: white; }
+        .square-blue { background: #3b82f6; color: white; }
+        .square-pink { background: #ec4899; color: white; }
+        .square-orange { background: #f59e0b; color: white; }
+        .square-red { background: #ef4444; color: white; }
+        .square-yellow { background: #eab308; color: white; }
+        .square-purple { background: #8b5cf6; color: white; }
+        .square-black { background: #1f2937; color: white; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-board">
+            <div class="board-background"></div>
+            <div class="board-elements-container">
+                <div class="outer-squares" id="outerSquares"></div>
+                <div class="inner-squares" id="innerSquares"></div>
+                <div class="center-logo">$</div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="section">
+                <div class="section-title">🎲 Тест клеток</div>
+                <div class="dice" id="dice">0</div>
+                <button class="roll-dice-button" id="rollDiceBtn">
+                    🎲 Бросить кубики
+                </button>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📊 Статистика</div>
+                <div class="status">
+                    <div>Внутренние: <span id="innerCount">0</span></div>
+                    <div>Внешние: <span id="outerCount">0</span></div>
+                    <div>Всего: <span id="totalCount">0</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">⏰ Время</div>
+                <div class="status" id="currentTime">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🎮 Тест клеток загружается...');
+
+        // Точные данные из working.html
+        const innerCellData = {
+            0: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            1: { name: "Розовая трата", type: "Трата", cost: 100, income: 0, description: "Обязательные траты от 100 до 4000$ на разные нужды", color: "pink", icon: "💸" },
+            2: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            3: { name: "Оранжевая благотворительность", type: "Благотворительность", cost: 0, income: 0, description: "Пожертвовать 10% от дохода для возможности бросать 2 кубика", color: "orange", icon: "❤️" },
+            4: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            5: { name: "Желтая PayDay", type: "PayDay", cost: 0, income: 0, description: "Получить зарплату", color: "yellow", icon: "💰" },
+            6: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            7: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            8: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            9: { name: "Розовая трата", type: "Трата", cost: 1000, income: 0, description: "Обязательные траты от 100 до 4000$ на разные нужды", color: "pink", icon: "💸" },
+            10: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            11: { name: "Фиолетовый ребенок", type: "Ребенок", cost: 0, income: 0, description: "Рождение ребенка", color: "purple", icon: "👶" },
+            12: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            13: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            14: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            15: { name: "Желтая PayDay", type: "PayDay", cost: 0, income: 0, description: "Получить зарплату", color: "yellow", icon: "💰" },
+            16: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            17: { name: "Розовая трата", type: "Трата", cost: 2000, income: 0, description: "Обязательные траты от 100 до 4000$ на разные нужды", color: "pink", icon: "💸" },
+            18: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            19: { name: "Черная потеря", type: "Потеря", cost: 0, income: -1, description: "Потеря всех активов", color: "black", icon: "💀" },
+            20: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            21: { name: "Желтая PayDay", type: "PayDay", cost: 0, income: 0, description: "Получить зарплату", color: "yellow", icon: "💰" },
+            22: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            23: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" }
+        };
+
+        const outerCellData = {
+            1: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            2: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            3: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            4: { name: "Черная потеря", type: "Потеря", cost: 0, income: -1, description: "Потеря всех активов", color: "black", icon: "💀" },
+            5: { name: "Оранжевая благотворительность", type: "Благотворительность", cost: 0, income: 0, description: "Пожертвовать 10% от дохода для возможности бросать 2 кубика", color: "orange", icon: "❤️" },
+            6: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            7: { name: "Черная потеря", type: "Потеря", cost: 0, income: -1, description: "Потеря всех активов", color: "black", icon: "💀" },
+            8: { name: "Оранжевая благотворительность", type: "Благотворительность", cost: 0, income: 0, description: "Пожертвовать 10% от дохода для возможности бросать 2 кубика", color: "orange", icon: "❤️" },
+            9: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            10: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            11: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            12: { name: "Красная благотворительность", type: "Благотворительность", cost: 0, income: 0, description: "Пожертвовать 10% от дохода для возможности бросать 2 кубика", color: "red", icon: "❤️" },
+            13: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            14: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            15: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            16: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            17: { name: "Красная благотворительность", type: "Благотворительность", cost: 0, income: 0, description: "Пожертвовать 10% от дохода для возможности бросать 2 кубика", color: "red", icon: "❤️" },
+            18: { name: "Черная потеря", type: "Потеря", cost: 0, income: -1, description: "Потеря всех активов", color: "black", icon: "💀" },
+            19: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            20: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            21: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            22: { name: "Желтая PayDay", type: "PayDay", cost: 0, income: 0, description: "Получить зарплату", color: "yellow", icon: "💰" },
+            23: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            24: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            25: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            26: { name: "Оранжевая благотворительность", type: "Благотворительность", cost: 0, income: 0, description: "Пожертвовать 10% от дохода для возможности бросать 2 кубика", color: "orange", icon: "❤️" },
+            27: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            28: { name: "Желтая PayDay", type: "PayDay", cost: 0, income: 0, description: "Получить зарплату", color: "yellow", icon: "💰" },
+            29: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            30: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            31: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            32: { name: "Розовая трата", type: "Трата", cost: 0, income: 0, description: "Обязательные траты от 100 до 4000$ на разные нужды", color: "pink", icon: "💸" },
+            33: { name: "Фиолетовый ребенок", type: "Ребенок", cost: 0, income: 0, description: "Рождение ребенка", color: "purple", icon: "👶" },
+            34: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            35: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            36: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            37: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            38: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            39: { name: "Черная потеря", type: "Потеря", cost: 0, income: -1, description: "Потеря всех активов", color: "black", icon: "💀" },
+            40: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            41: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            42: { name: "Синяя мечта", type: "Мечта", cost: 0, income: 0, description: "Мечта с номером 24", color: "blue", icon: "🏠" },
+            43: { name: "Зеленая возможность", type: "Возможность", cost: 0, income: 0, description: "Малая / большая сделка (на выбор)", color: "green", icon: "📈" },
+            44: { name: "Черная потеря", type: "Потеря", cost: 0, income: -1, description: "Потеря всех активов", color: "black", icon: "💀" }
+        };
+
+        function getCellColorClass(type, color) {
+            const colorMap = {
+                'Возможность': 'square-green',
+                'Трата': 'square-pink',
+                'Благотворительность': color === 'red' ? 'square-red' : 'square-orange',
+                'PayDay': 'square-yellow',
+                'Мечта': 'square-blue',
+                'Ребенок': 'square-purple',
+                'Потеря': 'square-black'
+            };
+            return colorMap[type] || 'square-gray';
+        }
+
+        function createInnerTrack() {
+            console.log('🔵 Создание внутреннего трека...');
+            const innerSquares = document.getElementById('innerSquares');
+            innerSquares.innerHTML = '';
+            
+            for (let i = 1; i <= 24; i++) {
+                const cellIndex = i - 1;
+                const cellData = innerCellData[cellIndex];
+                
+                const square = document.createElement('div');
+                square.className = `inner-square ${getCellColorClass(cellData.type, cellData.color)}`;
+                square.dataset.cell = i;
+                square.onclick = () => {
+                    console.log(`Внутренняя клетка ${i}: ${cellData.name}`);
+                    alert(`${cellData.name}: ${cellData.description}`);
+                };
+                
+                const angle = (i - 1) * (360 / 24) * (Math.PI / 180);
+                const radius = 170;
+                
+                const x = 50 + (radius / 200) * 50 * Math.cos(angle);
+                const y = 50 + (radius / 200) * 50 * Math.sin(angle);
+                
+                square.style.left = `${x}%`;
+                square.style.top = `${y}%`;
+                square.style.transform = 'translate(-50%, -50%)';
+                
+                square.innerHTML = `
+                    <div style="position: absolute; top: 4px; right: 4px; font-size: 10px; font-weight: bold; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);">${i}</div>
+                    <div style="font-size: 20px;">${cellData.icon}</div>
+                `;
+                
+                innerSquares.appendChild(square);
+            }
+            console.log(`✅ Внутренний трек создан: ${innerSquares.children.length} клеток`);
+            document.getElementById('innerCount').textContent = innerSquares.children.length;
+        }
+
+        function createOuterPerimeter() {
+            console.log('🔴 Создание внешнего периметра...');
+            const outerSquares = document.getElementById('outerSquares');
+            outerSquares.innerHTML = '';
+            
+            const cellSize = 58;
+            const spacing = 2;
+            const boardWidth = 650;
+            const boardHeight = 650;
+            const containerWidth = 950;
+            const containerHeight = 880;
+            const offsetX = (containerWidth - boardWidth) / 2;
+            const offsetY = (containerHeight - boardHeight) / 2;
+            
+            for (let i = 1; i <= 44; i++) {
+                const cellData = outerCellData[i];
+                
+                const square = document.createElement('div');
+                square.className = `outer-square ${getCellColorClass(cellData.type, cellData.color)}`;
+                square.dataset.cell = i;
+                square.onclick = () => {
+                    console.log(`Внешняя клетка ${i}: ${cellData.name}`);
+                    alert(`${cellData.name}: ${cellData.description}`);
+                };
+                
+                let x, y;
+                
+                if (i <= 12) {
+                    x = offsetX + (i - 1) * (cellSize + spacing);
+                    y = offsetY;
+                } else if (i <= 22) {
+                    x = offsetX + boardWidth - cellSize + 2 * (cellSize + spacing);
+                    y = offsetY + (i - 13) * (cellSize + spacing);
+                } else if (i <= 36) {
+                    x = offsetX + boardWidth - cellSize - (i - 23) * (cellSize + spacing) + 2 * (cellSize + spacing);
+                    y = offsetY + boardHeight - cellSize + 2 * (cellSize + spacing);
+                } else {
+                    x = offsetX;
+                    y = offsetY + boardHeight - cellSize - (i - 37) * (cellSize + spacing);
+                }
+                
+                square.style.left = `${x}px`;
+                square.style.top = `${y}px`;
+                
+                square.innerHTML = `
+                    <div style="position: absolute; top: 3px; right: 3px; font-size: 9px; font-weight: bold; color: white; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); z-index: 2;">${i}</div>
+                    <div style="font-size: 20px; z-index: 2; position: relative;">${cellData.icon}</div>
+                `;
+                
+                outerSquares.appendChild(square);
+            }
+            console.log(`✅ Внешний периметр создан: ${outerSquares.children.length} клеток`);
+            document.getElementById('outerCount').textContent = outerSquares.children.length;
+        }
+
+        function rollDice() {
+            const dice = document.getElementById('dice');
+            const result = Math.floor(Math.random() * 6) + 1;
+            dice.textContent = result;
+            dice.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                dice.style.transform = 'scale(1)';
+            }, 200);
+            console.log(`🎲 Выпало: ${result}`);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎮 Тест клеток загружается...');
+            
+            try {
+                createInnerTrack();
+                createOuterPerimeter();
+                
+                const rollDiceBtn = document.getElementById('rollDiceBtn');
+                if (rollDiceBtn) {
+                    rollDiceBtn.addEventListener('click', rollDice);
+                }
+                
+                setInterval(updateTime, 1000);
+                
+                const totalCount = document.getElementById('innerCount').textContent + document.getElementById('outerCount').textContent;
+                document.getElementById('totalCount').textContent = totalCount;
+                
+                console.log('✅ Тест клеток успешно инициализирован');
+            } catch (error) {
+                console.error('❌ Ошибка инициализации:', error);
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

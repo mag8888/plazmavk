@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Board v2.0 - Главная</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1d24 25%, #242830 50%, #1a1d24 75%, #0f1419 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 150, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 100, 200, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(100, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+            padding-bottom: 120px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 16px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: #a0a0a0;
+            font-weight: 500;
+            max-width: 600px;
+            margin: 0 auto 32px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+            box-shadow: 0 8px 32px rgba(0, 255, 150, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 255, 150, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #00bfff 0%, #0099cc 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 32px rgba(0, 191, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 191, 255, 0.4);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 255, 150, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+
+        .game-preview {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .game-preview h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        .game-preview p {
+            font-size: 16px;
+            color: #a0a0a0;
+            margin-bottom: 24px;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95) 0%, rgba(36, 40, 48, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 16px;
+            z-index: 1000;
+        }
+
+        .mobile-nav-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+        }
+
+        .mobile-nav-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            text-decoration: none;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mobile-nav-btn.active {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🎮 Game Board v2.0</h1>
+            <p>Финансовая настольная игра "Энергия Денег" - изучайте основы инвестирования и управления деньгами в увлекательной игровой форме</p>
+            
+            <div class="cta-buttons">
+                <a href="lobby.html" class="btn btn-primary">
+                    🚀 Начать игру
+                </a>
+                <a href="auth.html" class="btn btn-secondary">
+                    🔐 Авторизация
+                </a>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Образовательная игра</h3>
+                <p>Изучайте финансовую грамотность через увлекательную настольную игру</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Многопользовательская</h3>
+                <p>Играйте с друзьями онлайн в комнатах до 8 игроков</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Мобильная адаптация</h3>
+                <p>Играйте на любом устройстве - компьютере, планшете или телефоне</p>
+            </div>
+        </div>
+
+        <div class="game-preview">
+            <h2>🎲 Как играть?</h2>
+            <p>1. Создайте комнату или присоединитесь к существующей<br>
+            2. Дождитесь готовности всех игроков<br>
+            3. Хост начинает игру<br>
+            4. Бросайте кубик и двигайтесь по полю<br>
+            5. Приобретайте активы и управляйте финансами<br>
+            6. Первый игрок, достигший финансовой независимости, побеждает!</p>
+        </div>
+    </div>
+
+    <div class="mobile-nav">
+        <div class="mobile-nav-buttons">
+            <a href="index.html" class="mobile-nav-btn active">
+                <span>🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="lobby.html" class="mobile-nav-btn">
+                <span>🎮</span>
+                <span>Лобби</span>
+            </a>
+            <a href="game.html" class="mobile-nav-btn">
+                <span>🎯</span>
+                <span>Игра</span>
+            </a>
+            <a href="auth.html" class="mobile-nav-btn">
+                <span>👤</span>
+                <span>Профиль</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем авторизацию
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            const username = localStorage.getItem('username');
+
+            if (isAuthenticated && username) {
+                // Обновляем кнопки для авторизованного пользователя
+                const ctaButtons = document.querySelector('.cta-buttons');
+                ctaButtons.innerHTML = `
+                    <a href="lobby.html" class="btn btn-primary">
+                        🚀 Играть как ${username}
+                    </a>
+                    <a href="lobby.html" class="btn btn-secondary">
+                        🎮 Лобби
+                    </a>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

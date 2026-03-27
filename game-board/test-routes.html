@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест маршрутов - Game Board</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        
+        .routes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .route-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .route-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .route-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        
+        .route-url {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status-ok {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-error {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .info-panel {
+            background: #f0f4ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .info-panel h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест маршрутов Game Board</h1>
+        
+        <div class="info-panel">
+            <h3>ℹ️ Информация</h3>
+            <p><strong>Текущий URL:</strong> <span id="currentUrl"></span></p>
+            <p><strong>Время:</strong> <span id="currentTime"></span></p>
+            <p><strong>Версия:</strong> Game Board v2.6</p>
+        </div>
+        
+        <div class="routes-grid">
+            <div class="route-card">
+                <div class="route-title">🏠 Главная страница</div>
+                <div class="route-url">/</div>
+                <button class="btn" onclick="testRoute('/')">Тест локально</button>
+                <button class="btn btn-secondary" onclick="testRouteRailway('/')">Тест Railway</button>
+                <span class="status" id="status-1">⏳ Ожидание</span>
+            </div>
+            
+            <div class="route-card">
+                <div class="route-title">🔐 Авторизация</div>
+                <div class="route-url">/auth</div>
+                <button class="btn" onclick="testRoute('/auth')">Тест локально</button>
+                <button class="btn btn-secondary" onclick="testRouteRailway('/auth')">Тест Railway</button>
+                <span class="status" id="status-2">⏳ Ожидание</span>
+            </div>
+            
+            <div class="route-card">
+                <div class="route-title">🎮 Лобби (старое)</div>
+                <div class="route-url">/lobby</div>
+                <button class="btn" onclick="testRoute('/lobby')">Тест локально</button>
+                <button class="btn btn-secondary" onclick="testRouteRailway('/lobby')">Тест Railway</button>
+                <span class="status" id="status-3">⏳ Ожидание</span>
+            </div>
+            
+            <div class="route-card">
+                <div class="route-title">🎯 Игра</div>
+                <div class="route-url">/game</div>
+                <button class="btn" onclick="testRoute('/game')">Тест локально</button>
+                <button class="btn btn-secondary" onclick="testRouteRailway('/game')">Тест Railway</button>
+                <span class="status" id="status-4">⏳ Ожидание</span>
+            </div>
+            
+            <div class="route-card">
+                <div class="route-title">🎮 Лобби модуль (новое)</div>
+                <div class="route-url">/lobby-module</div>
+                <button class="btn" onclick="testRoute('/lobby-module')">Тест локально</button>
+                <button class="btn btn-secondary" onclick="testRouteRailway('/lobby-module')">Тест Railway</button>
+                <span class="status" id="status-5">⏳ Ожидание</span>
+            </div>
+            
+            <div class="route-card">
+                <div class="route-title">🔬 Тест</div>
+                <div class="route-url">/test</div>
+                <button class="btn" onclick="testRoute('/test')">Тест локально</button>
+                <button class="btn btn-secondary" onclick="testRouteRailway('/test')">Тест Railway</button>
+                <span class="status" id="status-6">⏳ Ожидание</span>
+            </div>
+            
+            <div class="route-card">
+                <div class="route-title">📚 Документы</div>
+                <div class="route-url">/docs</div>
+                <button class="btn" onclick="testRoute('/docs')">Тест локально</button>
+                <button class="btn btn-secondary" onclick="testRouteRailway('/docs')">Тест Railway</button>
+                <span class="status" id="status-7">⏳ Ожидание</span>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h3>🔧 API Эндпоинты</h3>
+            <button class="btn" onclick="testApi('/api/health')">🏥 API Health</button>
+            <button class="btn" onclick="testApi('/api/rooms')">🏠 API Rooms</button>
+            <button class="btn" onclick="testApi('/api/user/profile')">👤 API Profile</button>
+            <button class="btn" onclick="testApi('/api/user/stats')">📊 API Stats</button>
+        </div>
+        
+        <div class="info-panel">
+            <h3>🌐 Быстрые ссылки</h3>
+            <button class="btn" onclick="window.open('http://localhost:3000/lobby-module', '_blank')">💻 Локальный лобби</button>
+            <button class="btn" onclick="window.open('https://em1-production.up.railway.app/lobby-module', '_blank')">🚀 Railway лобби</button>
+            <button class="btn" onclick="copyCurrentUrl()">📋 Скопировать URL</button>
+        </div>
+    </div>
+    
+    <script>
+        // Обновляем информацию
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('currentTime').textContent = new Date().toLocaleString('ru-RU');
+        
+        async function testRoute(route) {
+            const statusId = 'status-' + getRouteIndex(route);
+            const statusElement = document.getElementById(statusId);
+            
+            try {
+                statusElement.textContent = '🔄 Тестирование...';
+                statusElement.className = 'status';
+                
+                const response = await fetch('http://localhost:3000' + route);
+                
+                if (response.ok) {
+                    statusElement.textContent = '✅ OK (' + response.status + ')';
+                    statusElement.className = 'status status-ok';
+                } else {
+                    statusElement.textContent = '❌ Error (' + response.status + ')';
+                    statusElement.className = 'status status-error';
+                }
+            } catch (error) {
+                statusElement.textContent = '❌ Ошибка: ' + error.message;
+                statusElement.className = 'status status-error';
+            }
+        }
+        
+        async function testRouteRailway(route) {
+            const statusId = 'status-' + getRouteIndex(route);
+            const statusElement = document.getElementById(statusId);
+            
+            try {
+                statusElement.textContent = '🔄 Тестирование Railway...';
+                statusElement.className = 'status';
+                
+                const response = await fetch('https://em1-production.up.railway.app' + route);
+                
+                if (response.ok) {
+                    statusElement.textContent = '✅ Railway OK (' + response.status + ')';
+                    statusElement.className = 'status status-ok';
+                } else {
+                    statusElement.textContent = '❌ Railway Error (' + response.status + ')';
+                    statusElement.className = 'status status-error';
+                }
+            } catch (error) {
+                statusElement.textContent = '❌ Railway Ошибка: ' + error.message;
+                statusElement.className = 'status status-error';
+            }
+        }
+        
+        async function testApi(endpoint) {
+            try {
+                const response = await fetch('http://localhost:3000' + endpoint);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ API ' + endpoint + ' работает:\n' + JSON.stringify(data, null, 2));
+                } else {
+                    alert('❌ API ' + endpoint + ' ошибка: ' + response.status);
+                }
+            } catch (error) {
+                alert('❌ API ' + endpoint + ' ошибка: ' + error.message);
+            }
+        }
+        
+        function getRouteIndex(route) {
+            const routes = ['/', '/auth', '/lobby', '/game', '/lobby-module', '/test', '/docs'];
+            return routes.indexOf(route) + 1;
+        }
+        
+        function copyCurrentUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('✅ URL скопирован в буфер обмена: ' + window.location.href);
+            }).catch(() => {
+                alert('❌ Не удалось скопировать URL');
+            });
+        }
+        
+        // Автоматическое тестирование всех маршрутов
+        setTimeout(() => {
+            console.log('🧪 Начинаем автоматическое тестирование маршрутов...');
+            const routes = ['/', '/auth', '/lobby', '/game', '/lobby-module', '/test', '/docs'];
+            routes.forEach((route, index) => {
+                setTimeout(() => testRoute(route), index * 500);
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рабочая версия - Энергия денег</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --board-size: 700px;
+            --outer-cell-size: 54px;
+            --outer-cell-gap: 4px;
+            --inner-cell-size: 50px;
+            --sidebar-width: 320px;
+            --panel-bg: rgba(21, 27, 42, 0.9);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            color-scheme: dark;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(circle at 15% 20%, rgba(0, 234, 255, 0.18) 0%, transparent 55%),
+                        radial-gradient(circle at 78% 82%, rgba(255, 0, 128, 0.18) 0%, transparent 55%),
+                        linear-gradient(150deg, #0c1424 0%, #181f32 50%, #0a101f 100%);
+            color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 56px 48px 96px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .page-shell {
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            align-items: flex-start;
+            gap: 56px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .content-column {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(24px, calc(var(--computed-board-size, var(--board-size)) * 0.04), 36px);
+        }
+
+        .board-wrapper {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .board-frame {
+            position: relative;
+            width: var(--board-size);
+            height: var(--board-size);
+            border-radius: 48px;
+            background: linear-gradient(160deg, #151d30 0%, #111527 45%, #0f1422 100%);
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(255, 255, 255, 0.04);
+            overflow: visible;
+        }
+
+        .board-frame::before {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border-radius: 40px;
+            background: radial-gradient(circle at 50% 42%, rgba(255, 205, 64, 0.12) 0%, transparent 60%),
+                        linear-gradient(200deg, rgba(32, 48, 78, 0.7) 0%, rgba(16, 22, 34, 0.95) 62%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .outer-track,
+        .inner-track {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .outer-track {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .track-cell {
+            position: absolute;
+            width: var(--outer-cell-size);
+            height: var(--outer-cell-size);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.14);
+            pointer-events: auto;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .track-cell:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 22px 46px rgba(0, 0, 0, 0.55);
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 6px;
+            left: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.92);
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell-icon {
+            font-size: 22px;
+            filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.35));
+        }
+
+        .cell-pink { background: linear-gradient(145deg, #ff4f93 0%, #ff2780 100%); }
+        .cell-green { background: linear-gradient(145deg, #32df8d 0%, #19b86a 100%); }
+        .cell-teal { background: linear-gradient(145deg, #25d0ff 0%, #0090f5 100%); }
+        .cell-purple { background: linear-gradient(145deg, #a769ff 0%, #7351ff 100%); }
+        .cell-orange { background: linear-gradient(145deg, #ffb347 0%, #ff8c42 100%); }
+        .cell-yellow { background: linear-gradient(145deg, #ffd65a 0%, #ffb700 100%); color: #2f2600; }
+        .cell-blue { background: linear-gradient(145deg, #4e95ff 0%, #2563eb 100%); }
+        .cell-red { background: linear-gradient(145deg, #ff6b6b 0%, #ff3b3b 100%); }
+        .cell-slate { background: linear-gradient(145deg, #34435a 0%, #1e2838 100%); }
+
+        .inner-track .track-cell {
+            width: var(--inner-cell-size);
+            height: var(--inner-cell-size);
+            font-size: 18px;
+            border-width: 1.5px;
+        }
+
+        .inner-track .cell-number {
+            right: 8px;
+            left: auto;
+            font-size: 12px;
+        }
+
+        .center-wheel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(var(--computed-board-size, var(--board-size)) * 0.32);
+            height: calc(var(--computed-board-size, var(--board-size)) * 0.32);
+            max-width: 230px;
+            max-height: 230px;
+            min-width: 170px;
+            min-height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 40%, rgba(255, 209, 64, 0.78) 0%, rgba(255, 166, 0, 0.82) 34%, rgba(25, 25, 25, 0.96) 64%);
+            box-shadow: 0 0 50px rgba(255, 196, 0, 0.5), inset 0 0 40px rgba(0, 0, 0, 0.55);
+            border: 4px solid rgba(255, 205, 92, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .center-wheel::before {
+            content: '';
+            position: absolute;
+            inset: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 45%, rgba(0, 0, 0, 0.92) 0%, rgba(40, 40, 40, 1) 65%, rgba(0, 0, 0, 0.94) 100%);
+            border: 2px solid rgba(255, 205, 92, 0.45);
+        }
+
+        .center-wheel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.35);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .center-wheel:hover {
+            transform: translate(-50%, -50%) scale(1.03);
+            box-shadow: 0 0 70px rgba(255, 196, 0, 0.65), inset 0 0 44px rgba(0, 0, 0, 0.6);
+        }
+
+        .center-wheel.spin::after {
+            opacity: 1;
+        }
+
+        .wheel-number {
+            position: relative;
+            font-size: clamp(48px, calc(var(--computed-board-size, var(--board-size)) * 0.12), 82px);
+            font-weight: 800;
+            color: #ffd15a;
+            text-shadow: 0 0 20px rgba(255, 196, 0, 0.55);
+            z-index: 2;
+        }
+
+        .player-tokens {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .player-token {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.35);
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            transform: translate(-50%, -50%);
+        }
+
+        .deal-strip {
+            margin-top: clamp(24px, calc(var(--computed-board-size, var(--board-size)) * 0.04), 36px);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: clamp(16px, calc(var(--computed-board-size, var(--board-size)) * 0.04), 24px);
+        }
+
+        .special-card {
+            width: clamp(150px, calc(var(--computed-board-size, var(--board-size)) * 0.22), 210px);
+            height: clamp(120px, calc(var(--computed-board-size, var(--board-size)) * 0.18), 150px);
+            border-radius: 24px;
+            padding: 18px;
+            background: linear-gradient(160deg, rgba(25, 36, 58, 0.92) 0%, rgba(14, 21, 37, 0.96) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 22px 44px rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        .special-card.big-deal {
+            border-color: rgba(0, 224, 255, 0.55);
+            box-shadow: 0 22px 40px rgba(0, 224, 255, 0.24);
+        }
+
+        .special-card.small-deal {
+            border-color: rgba(0, 132, 255, 0.55);
+            box-shadow: 0 22px 40px rgba(0, 132, 255, 0.2);
+        }
+
+        .special-card.expenses {
+            border-color: rgba(255, 64, 128, 0.55);
+            box-shadow: 0 24px 44px rgba(255, 64, 128, 0.26);
+        }
+
+        .special-card.market {
+            border-color: rgba(0, 255, 180, 0.55);
+            box-shadow: 0 24px 44px rgba(0, 255, 180, 0.2);
+        }
+
+        .special-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .special-metric {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            padding: 26px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+        }
+
+        .players-panel {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .players-list-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .player-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border 0.2s ease;
+        }
+
+        .player-card.is-active {
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.25);
+        }
+
+        .player-card.is-self {
+            border-color: rgba(16, 185, 129, 0.6);
+        }
+
+        .player-card-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .player-card-cash {
+            color: #22c55e;
+        }
+
+        .player-card-meta,
+        .player-card-stats {
+            display: none; /* Скрыто по запросу пользователя */
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .panel h3 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.82);
+            margin-bottom: 18px;
+        }
+
+        .status-panel .panel-body {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .status-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(123, 97, 255, 0.28) 0%, rgba(123, 97, 255, 0.14) 100%);
+            border: 1px solid rgba(123, 97, 255, 0.4);
+        }
+
+        .status-chip.is-my-turn {
+            border-color: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
+        }
+
+        .status-chip .status-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .status-chip .status-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-top: 4px;
+        }
+
+        .status-chip .status-icon {
+            font-size: 28px;
+        }
+
+        .last-roll {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .turn-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .turn-controls .btn {
+            flex: 1;
+        }
+
+        .turn-controls .btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .timer-readout {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .timer-readout .timer-value {
+            font-size: 34px;
+            font-weight: 800;
+        }
+
+        .timer-readout .timer-caption {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .finance-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .finance-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .finance-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .finance-value {
+            font-weight: 700;
+            color: #15f7a4;
+        }
+
+        .finance-value.negative {
+            color: #ff6b8a;
+        }
+
+        .loan-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(29, 233, 182, 0.15) 0%, rgba(29, 233, 182, 0.06) 100%);
+            border: 1px solid rgba(29, 233, 182, 0.35);
+            margin-top: 18px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #16f79e 0%, #06b973 100%);
+            color: #03110a;
+            box-shadow: 0 14px 26px rgba(6, 185, 115, 0.35);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff3b3b 100%);
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(255, 59, 59, 0.32);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b973 0%, #00d4aa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1d24;
+            flex-shrink: 0;
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .user-details p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+
+        .profile-actions {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-exit {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-exit:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.4);
+        }
+
+        .assets-total {
+            font-size: 42px;
+            font-weight: 800;
+            color: #16f79e;
+            text-shadow: 0 0 22px rgba(22, 247, 158, 0.35);
+        }
+
+        .assets-caption {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 4px;
+        }
+
+        .assets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .assets-placeholder {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .asset-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .profession-panel .profession-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .profession-header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .profession-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .profession-name {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .profession-description {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .profession-finance {
+            display: grid;
+            gap: 8px;
+        }
+
+        .profession-finance div {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .profession-finance strong {
+            color: #16f79e;
+        }
+
+        .asset-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .asset-type {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .asset-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .asset-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .asset-transfer {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .asset-transfer-select {
+            flex: 1;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f3f4f6;
+            padding: 8px;
+        }
+
+        .cell-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 12, 20, 0.78);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 50;
+        }
+
+        .deal-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 80;
+        }
+
+        .deal-modal.visible {
+            display: flex;
+        }
+
+        .deal-modal-content {
+            background: rgba(18, 24, 40, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 20px;
+            padding: 28px;
+            width: min(420px, 90vw);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .deal-modal-header {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .deal-modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .deal-modal-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .deal-modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .deal-card-details {
+            display: grid;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .deal-card-details span:first-child {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .game-toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: rgba(17, 24, 39, 0.92);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            color: #e5e7eb;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .game-toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cell-modal.show {
+            display: flex;
+        }
+
+        .modal-card {
+            position: relative;
+            width: min(420px, 100%);
+            border-radius: 28px;
+            padding: 32px 28px 28px;
+            background: linear-gradient(165deg, rgba(20, 27, 44, 0.95), rgba(13, 18, 32, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 28px 66px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .modal-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 28px;
+            background: var(--modal-accent, linear-gradient(135deg, rgba(79, 172, 254, 0.35), rgba(0, 242, 254, 0.22)));
+            opacity: 0.65;
+            z-index: -1;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.25);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: rgba(240, 244, 255, 0.82);
+            line-height: 1.6;
+        }
+
+        .modal-action {
+            align-self: flex-end;
+            padding: 12px 22px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            color: #0b1624;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1280px) {
+            :root {
+                --board-size: 640px;
+                --outer-cell-size: 48px;
+                --inner-cell-size: 46px;
+                --outer-cell-gap: 4px;
+            }
+            .page-shell { gap: 40px; }
+        }
+
+        @media (max-width: 1080px) {
+            :root {
+                --board-size: 600px;
+                --outer-cell-size: 44px;
+                --inner-cell-size: 44px;
+                --outer-cell-gap: 3px;
+            }
+        }
+
+        @media (max-width: 960px) {
+            :root {
+                --board-size: 560px;
+                --outer-cell-size: 40px;
+                --inner-cell-size: 40px;
+                --outer-cell-gap: 3px;
+            }
+            body { padding: 48px 32px 88px; }
+            .page-shell {
+                flex-direction: column;
+                align-items: center;
+                gap: 32px;
+            }
+            .content-column { order: 1; width: 100%; }
+            .deal-strip { order: 2; width: 100%; }
+            .sidebar {
+                width: min(440px, 100%);
+                order: 3;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --board-size: 520px;
+                --outer-cell-size: 36px;
+                --inner-cell-size: 36px;
+                --outer-cell-gap: 3px;
+            }
+            .deal-strip {
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --board-size: 480px;
+                --outer-cell-size: 32px;
+                --inner-cell-size: 34px;
+                --outer-cell-gap: 2px;
+            }
+            body { padding: 40px 24px 80px; }
+            .special-card { display: none; }
+            .deal-strip { display: none; }
+            .sidebar { width: 100%; }
+        }
+
+        @media (max-width: 520px) {
+            :root {
+                --board-size: 440px;
+                --outer-cell-size: 28px;
+                --inner-cell-size: 30px;
+                --outer-cell-gap: 2px;
+            }
+        }
+
+        @media (max-width: 460px) {
+            :root {
+                --board-size: 400px;
+                --outer-cell-size: 26px;
+                --inner-cell-size: 28px;
+                --outer-cell-gap: 2px;
+            }
+            body { padding: 36px 16px 72px; }
+            .panel { padding: 20px; border-radius: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="content-column">
+            <div class="board-wrapper">
+                <div class="board-frame">
+                    <div class="outer-track" id="outerTrack"></div>
+                    <div class="inner-track" id="innerTrack"></div>
+                    <div class="player-tokens" id="playerTokens"></div>
+
+                    <div class="center-wheel" id="centerWheel">
+                        <div class="wheel-number" id="wheelNumber">1</div>
+                    </div>
+                    </div>
+                    </div>
+                    
+            <div class="deal-strip">
+                <div class="special-card big-deal">
+                    <div class="special-title">💼 Большая сделка</div>
+                    <div class="special-metric">24 карты</div>
+                    <div class="special-metric">Премиум возможности</div>
+                    </div>
+                <div class="special-card small-deal">
+                    <div class="special-title">📦 Малая сделка</div>
+                    <div class="special-metric">32 карты</div>
+                    <div class="special-metric">Стартовые инвестиции</div>
+                </div>
+                <div class="special-card expenses">
+                    <div class="special-title">💳 Расходы</div>
+                    <div class="special-metric">24 карты</div>
+                    <div class="special-metric">Обязательные платежи</div>
+            </div>
+                <div class="special-card market">
+                    <div class="special-title">🛒 Рынок</div>
+                    <div class="special-metric">24 карты</div>
+                    <div class="special-metric">Спец. предложения</div>
+                </div>
+                </div>
+                </div>
+
+        <aside class="sidebar">
+            <div class="panel status-panel">
+                <h3>Игровая информация</h3>
+                <div class="panel-body">
+                    <div class="status-chip" id="turnStatusChip">
+                        <div>
+                            <div class="status-label">Текущее состояние</div>
+                            <div class="status-value" id="turnState">Подключение...</div>
+                        </div>
+                        <div class="status-icon">🕒</div>
+                    </div>
+                    <div class="last-roll">
+                        <span>Последний бросок:</span>
+                        <span id="lastRollValue">—</span>
+                    </div>
+                    <div class="turn-controls">
+                        <button class="btn btn-primary" id="rollDiceBtn">Бросить кубик</button>
+                        <button class="btn btn-secondary" id="endTurnBtn" disabled>Завершить ход</button>
+                        <button class="btn btn-accent" id="addPlayerBtn">Добавить игрока</button>
+                        <button class="btn btn-accent" id="movePlayerBtn">Переместить игрока</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel players-panel">
+                <h3>Игроки</h3>
+                <div id="playersPanelList" class="players-list-panel"></div>
+            </div>
+
+            <div class="panel finance-panel">
+                <h3>Банковские операции</h3>
+                <div class="finance-grid">
+                    <div class="finance-row">
+                        <span>Доход:</span>
+                        <span class="finance-value" id="incomeValue">$0</span>
+                    </div>
+                    <div class="finance-row">
+                        <span>Расходы:</span>
+                        <span class="finance-value negative" id="expenseValue">$0</span>
+                    </div>
+                    <div class="finance-row">
+                        <span>PAYDAY:</span>
+                        <span class="finance-value" id="paydayValue">$0/мес</span>
+                    </div>
+                </div>
+                <div class="loan-status">
+                    <span>Кредит:</span>
+                    <span class="finance-value" id="loanValue">$0</span>
+                </div>
+                <div class="finance-actions">
+                    <button class="btn btn-primary" id="bankButton">🏦 Банк</button>
+                    <button class="btn btn-primary" id="dealsButton">🃏 Сделки</button>
+                </div>
+            </div>
+
+            <div class="panel assets-panel">
+                <h3>Активы</h3>
+                <div class="assets-total" id="assetsTotal">$0</div>
+                <div class="assets-caption" id="assetsIncome">Доход: $0 / мес</div>
+                <div class="assets-list" id="assetsList"></div>
+                <button class="btn btn-secondary" id="assetsButton" style="margin-top: 10px; width: 100%;" onclick="window.dealsModule?.showAssetsCatalog()">
+                    📦 Каталог активов
+                </button>
+            </div>
+
+            <div class="panel profession-panel">
+                <h3>Профессия</h3>
+                <div class="profession-card" id="professionCard">
+                    <div class="profession-header">
+                        <span class="profession-icon" id="professionIcon">🚀</span>
+                        <div>
+                            <div class="profession-name" id="professionName">—</div>
+                            <div class="profession-description" id="professionDescription">—</div>
+                        </div>
+                    </div>
+                    <div class="profession-finance">
+                        <div><span>Зарплата</span><strong id="professionSalary">$0</strong></div>
+                        <div><span>Расходы</span><strong id="professionExpenses">$0</strong></div>
+                        <div><span>Денежный поток</span><strong id="professionCashflow">$0</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel profile-panel">
+                <h3>👤 Профиль</h3>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <div class="user-details">
+                        <h3 id="username">Пользователь</h3>
+                        <p id="userStatus">Онлайн</p>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button class="btn btn-exit" id="leaveRoomBtn">
+                        <span>🚪</span>
+                        <span>Выйти</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="deal-modal" id="dealModal">
+        <div class="deal-modal-content">
+            <button class="deal-modal-close" data-role="deal-close">✕</button>
+            <div class="deal-modal-header" data-role="deal-header">Сделка</div>
+            <div class="deal-modal-body" data-role="deal-body"></div>
+            <div class="deal-modal-actions" data-role="deal-actions"></div>
+        </div>
+    </div>
+
+    <div class="cell-modal" id="cellModal">
+        <div class="modal-card" id="modalCard">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-icon" id="modalIcon">🎲</div>
+            <div class="modal-title" id="modalTitle">Клетка №1</div>
+            <div class="modal-text" id="modalText">Совершите действие согласно карточке.</div>
+            <button class="modal-action" id="modalAction">Понятно</button>
+        </div>
+    </div>
+
+    <div class="game-toast" id="gameToast"></div>
+
+    <!-- Загружаем конфигурацию игры -->
+    <script src="config/game-config.js"></script>
+    
+    <!-- Загружаем основные модули в правильном порядке -->
+    <script src="assets/js/core/EventBus.js"></script>
+    <script src="assets/js/core/StateManager.js"></script>
+    <script src="assets/js/core/ModuleManager.js"></script>
+    <script src="assets/js/modules/api/ApiClient.js"></script>
+    <script src="assets/js/modules/game/Board.js"></script>
+    <script src="assets/js/modules/game/Dice.js"></script>
+    <script src="assets/js/modules/game/Player.js"></script>
+    <script src="assets/js/modules/game/ProfessionCard.js?v=11"></script>
+    <script src="game-board/config/full-cards-config.js?v=1"></script>
+    <script src="game-board/config/cards-config.js?v=1"></script>
+    <script src="assets/js/modules/game/DealsModule.js?v=1"></script>
+    <script>
+        // Инициализация DealsModule
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof DealsModule !== 'undefined') {
+                window.dealsModule = new DealsModule();
+                console.log('🎴 DealsModule инициализирован');
+            } else {
+                console.error('❌ DealsModule не найден');
+            }
+            
+            // Обработчик кнопки банка
+            const bankBtn = document.getElementById('bankButton');
+            if (bankBtn) {
+                bankBtn.addEventListener('click', () => {
+                    if (typeof window.openBankV4 === 'function') {
+                        window.openBankV4();
+                    } else {
+                        console.warn('BankModuleV4 не доступен');
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="assets/js/core/GameCore.js"></script>
+    
+    <!-- Bank Module v4 -->
+    <link rel="stylesheet" href="bank-module-v4/bank-styles-v4.css?v=4.1">
+    <script src="bank-module-v4/bank-module-v4.js?v=4.1"></script>
+    <script src="bank-module-v4/integration.js?v=4.1"></script>
+    
+    <!-- Инициализируем рабочую версию -->
+    <script src="assets/js/working-version.js"></script>
+
+</body>
+</html>

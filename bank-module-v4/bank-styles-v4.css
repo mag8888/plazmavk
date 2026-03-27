@@ -1,0 +1,827 @@
+/* Bank Module v4 - Clean and Modern Styles */
+/* VERSION: 4.1-DEBUG (с синхронизацией баланса) */
+
+/* Modal Base */
+.bank-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+}
+
+.bank-modal-content {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Header */
+.bank-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bank-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bank-header-balance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.bank-icon {
+    font-size: 32px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.bank-modal-title {
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.bank-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.bank-modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* Body */
+.bank-modal-body {
+    display: flex;
+    gap: 32px;
+    padding: 32px;
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+}
+
+/* Left Column */
+.bank-info-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Bank Status */
+.bank-status-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bank-status-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bank-icon-small {
+    font-size: 20px;
+}
+
+.bank-status-label {
+    color: #e2e8f0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.bank-status-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.bank-status-badge.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Balance Section */
+.balance-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.current-balance {
+    font-size: 36px;
+    font-weight: 800;
+    color: #10b981;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.balance-label {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Financial Summary */
+.financial-summary {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-icon {
+    font-size: 18px;
+    margin-right: 12px;
+    color: #f1f5f9;
+}
+
+.summary-label {
+    color: #f1f5f9;
+    font-size: 14px;
+    flex: 1;
+    font-weight: 500;
+}
+
+.summary-value {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.summary-item.income .summary-value {
+    color: #10b981;
+}
+
+.summary-item.expenses .summary-value {
+    color: #ef4444;
+}
+
+.summary-item.payday .summary-value {
+    color: #f59e0b;
+}
+
+/* Credit Section */
+.credit-section {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.credit-info {
+    margin-bottom: 16px;
+}
+
+.credit-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.credit-icon {
+    font-size: 16px;
+    margin-right: 8px;
+    color: #f1f5f9;
+}
+
+.credit-label {
+    color: #f1f5f9;
+    flex: 1;
+    font-weight: 500;
+}
+
+.credit-value {
+    color: #e2e8f0;
+    font-weight: 700;
+}
+
+.credit-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.credit-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.credit-btn.payoff {
+    background: rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.credit-btn.take {
+    background: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.credit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.credit-btn:active {
+    transform: translateY(0);
+}
+
+/* Right Column */
+.operations-column {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Transfer Section */
+.transfer-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+    color: #e2e8f0;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+}
+
+.transfer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-group {
+    flex: 1;
+}
+
+.form-label {
+    display: block;
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-select,
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus,
+.form-input:focus {
+    outline: none;
+    border-color: #f59e0b;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.amount-input-wrapper {
+    position: relative;
+}
+
+.amount-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+.amount-input {
+    padding-left: 40px;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.transfer-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.transfer-btn.primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.transfer-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.transfer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.transfer-btn:active {
+    transform: translateY(0);
+}
+
+/* History Section */
+.history-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.history-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.history-icon {
+    font-size: 14px;
+}
+
+.history-count {
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Transfers History */
+.transfers-history {
+    flex: 1;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 8px;
+    margin-right: -8px;
+}
+
+.transfer-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.transfer-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.transfer-amount {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.transfer-amount.received {
+    color: #10b981;
+}
+
+.transfer-amount.sent {
+    color: #ef4444;
+}
+
+.transfer-description {
+    color: #e2e8f0;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.transfer-time {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.transfer-empty {
+    padding: 16px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Scrollbar Styling */
+.transfers-history::-webkit-scrollbar {
+    width: 6px;
+}
+
+.transfers-history::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.transfers-history::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.transfers-history::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Firefox Scrollbar */
+.transfers-history {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .bank-modal-body {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+    }
+    
+    .credit-buttons {
+        flex-direction: column;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bank-modal-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #f59e0b;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Улучшенная видимость для кредитной секции */
+.credit-section .credit-label,
+.credit-section .credit-value,
+.credit-section .credit-icon {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.credit-section .credit-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 4px 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.credit-section .credit-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Улучшенная видимость для финансовых деталей */
+.financial-summary .summary-label,
+.financial-summary .summary-icon {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.financial-summary .summary-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 4px 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.financial-summary .summary-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Улучшенная видимость полей ввода */
+.form-input::placeholder,
+.form-select::placeholder {
+    color: #94a3b8;
+    opacity: 0.8;
+}
+
+/* Стили для разворачиваемых секций */
+.financial-item.expandable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.financial-item.expandable:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.expand-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.financial-item.expandable.expanded .expand-icon {
+    transform: translateY(-50%) rotate(90deg);
+}
+
+.income-details,
+.expenses-details {
+    margin-left: 20px;
+    margin-top: 8px;
+    padding-left: 16px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.financial-subitem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 14px;
+    color: #cbd5e1;
+}
+
+.financial-subitem .financial-label {
+    color: #94a3b8;
+}
+
+.assets-income,
+.profession-expenses {
+    margin-top: 8px;
+}
+
+.asset-income-item,
+.profession-expense-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-left: 16px;
+}
+
+.asset-income-item .asset-name,
+.profession-expense-item .expense-name {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.asset-income-item .asset-income,
+.profession-expense-item .expense-amount {
+    color: #10b981;
+    font-weight: 500;
+}
+
+.form-input:focus::placeholder,
+.form-select:focus::placeholder {
+    opacity: 0.6;
+}
+
+/* Expandable Sections */
+.financial-item.expandable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.financial-item.expandable:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.expand-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.financial-item.expandable:hover .expand-icon {
+    color: #f59e0b;
+}
+
+.income-details,
+.expenses-details {
+    margin-left: 20px;
+    margin-top: 8px;
+    padding-left: 16px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.financial-subitem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+    color: #cbd5e1;
+}
+
+.financial-subitem .financial-label {
+    color: #94a3b8;
+}
+
+.financial-subitem .financial-value {
+    font-weight: 500;
+}
+
+.assets-income,
+.profession-expenses {
+    margin-top: 8px;
+}
+
+.assets-income .financial-subitem,
+.profession-expenses .financial-subitem {
+    padding: 4px 0;
+    font-size: 13px;
+}
+
+/* Loan items and payoff buttons */
+.financial-subitem.loan-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 0;
+}
+
+.financial-subitem.loan-item .financial-label {
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.expense-note {
+    font-size: 11px;
+    color: #94a3b8;
+    font-style: italic;
+    margin-left: 8px;
+}
+
+.payoff-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    align-self: flex-end;
+}
+
+.payoff-btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+}
+
+.payoff-btn:disabled {
+    background: #6b7280;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}

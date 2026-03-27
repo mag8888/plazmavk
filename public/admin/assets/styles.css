@@ -1,0 +1,216 @@
+/* Отключение автоматического перехода на детальную страницу */
+.adminjs-table-row {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+.adminjs-table-row:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Убираем pointer cursor с строк таблицы */
+.adminjs-table-row td {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+/* Отключение всех ссылок в строках */
+.adminjs-table tbody tr a {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+/* Отключение клика по всему содержимому строк */
+.adminjs-table tbody tr * {
+  pointer-events: none !important;
+}
+
+/* Стили для кнопок действий */
+.adminjs-button {
+  margin: 2px;
+}
+
+/* Улучшенная навигация */
+.adminjs-navigation {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.adminjs-navigation-item {
+  transition: all 0.3s ease;
+}
+
+.adminjs-navigation-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+/* Стили для списков */
+.adminjs-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.adminjs-table th {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  font-weight: 600;
+  color: #495057;
+}
+
+.adminjs-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Стили для форм */
+.adminjs-form {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для фильтров */
+.adminjs-filter {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+/* Улучшенные кнопки */
+.adminjs-button--primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  color: white;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.adminjs-button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.adminjs-button--secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  color: white;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.adminjs-button--secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Стили для заголовков */
+.adminjs-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Стили для карточек */
+.adminjs-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.adminjs-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Отключение клика по строкам таблицы */
+.adminjs-table tbody tr {
+  pointer-events: none;
+}
+
+.adminjs-table tbody tr td {
+  pointer-events: auto;
+}
+
+/* Стили для активных элементов */
+.adminjs-navigation-item--active {
+  background: rgba(255, 255, 255, 0.2);
+  border-left: 4px solid #fff;
+}
+
+/* Улучшенные поля ввода */
+.adminjs-input {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  padding: 10px 12px;
+  transition: all 0.3s ease;
+}
+
+.adminjs-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Стили для textarea */
+.adminjs-textarea {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  padding: 10px 12px;
+  transition: all 0.3s ease;
+  resize: vertical;
+}
+
+.adminjs-textarea:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Стили для выпадающих списков */
+.adminjs-select {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  padding: 10px 12px;
+  transition: all 0.3s ease;
+}
+
+.adminjs-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.adminjs-content {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Стили для мобильных устройств */
+@media (max-width: 768px) {
+  .adminjs-table {
+    font-size: 14px;
+  }
+  
+  .adminjs-button {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+  
+  .adminjs-navigation {
+    flex-direction: column;
+  }
+}

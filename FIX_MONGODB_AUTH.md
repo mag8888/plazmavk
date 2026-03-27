@@ -1,0 +1,99 @@
+# 🔧 Исправление ошибки аутентификации MongoDB
+
+## ⚠️ Проблема
+
+Ошибка: `SCRAM failure: Authentication failed`
+
+Это означает, что строка подключения к MongoDB содержит неправильные учетные данные.
+
+## ✅ Решение
+
+### Вариант 1: Пересоздать MongoDB сервис (Рекомендуется)
+
+1. **Удалите текущий MongoDB сервис:**
+   - Railway Dashboard → MongoDB сервис → "Settings" → "Delete Service"
+
+2. **Создайте новый MongoDB сервис:**
+   - Railway Dashboard → "+ New" → "Database" → "Add MongoDB"
+   - Дождитесь создания (1-2 минуты)
+
+3. **Обновите DATABASE_URL:**
+   - Откройте основной сервис (бот) → "Settings" → "Variables"
+   - Найдите `DATABASE_URL`
+   - Обновите значение на: `${{MongoDB.MONGO_URL}}`
+   - Или скопируйте новое значение `MONGO_URL` из MongoDB сервиса
+
+4. **Перезапустите приложение:**
+   - Railway автоматически перезапустит приложение
+
+### Вариант 2: Проверить и исправить строку подключения
+
+1. **Откройте MongoDB сервис в Railway:**
+   - Railway Dashboard → MongoDB сервис → "Variables"
+
+2. **Проверьте `MONGO_URL`:**
+   - Скопируйте полное значение `MONGO_URL` из MongoDB сервиса
+   - Формат должен быть: `mongodb://mongo:password@host:port/database`
+   - Или: `mongodb://mongo:password@host:port` (имя БД добавится автоматически)
+
+3. **Проверьте в основном сервисе:**
+   - Откройте основной сервис (бот) → "Settings" → "Variables"
+   - Найдите `DATABASE_URL`
+   - Убедитесь, что значение совпадает с `MONGO_URL` из MongoDB сервиса
+   - Или используйте Reference Variable: `${{MongoDB.MONGO_URL}}`
+
+4. **Если пароль содержит специальные символы:**
+   - Код теперь автоматически URL-кодирует специальные символы
+   - Если проблема сохраняется, попробуйте пересоздать сервис
+
+### Вариант 2.1: Попробовать без аутентификации (если Railway MongoDB это поддерживает)
+
+Если Railway MongoDB находится в той же сети и не требует аутентификации:
+
+1. **Проверьте формат строки:**
+   - Попробуйте формат: `mongodb://mongo:27017/plazma_bot`
+   - Без пользователя и пароля (только для внутренней сети Railway)
+
+2. **Установите в Railway:**
+   - Основной сервис → "Settings" → "Variables"
+   - Обновите `DATABASE_URL` на формат без аутентификации
+
+### Вариант 3: Использовать MongoDB Atlas (временно)
+
+Если Railway MongoDB не работает, можно временно использовать MongoDB Atlas:
+
+1. **Создайте кластер в MongoDB Atlas:**
+   - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+   - Создайте бесплатный кластер M0
+
+2. **Получите строку подключения:**
+   - Формат: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority`
+
+3. **Установите в Railway:**
+   - Основной сервис → "Settings" → "Variables"
+   - Добавьте `DATABASE_URL` со строкой подключения из Atlas
+
+## 🔍 Проверка
+
+После исправления проверьте логи:
+
+```bash
+railway logs
+```
+
+Ожидаемые сообщения:
+- ✅ `Database connected`
+- ✅ `Database schema synchronized` (или `already up to date`)
+- ❌ Нет ошибок `Authentication failed`
+
+## 📝 Примечание
+
+Бот продолжает работать даже при ошибках аутентификации, используя mock данные. Но для полной функциональности нужно исправить подключение к БД.
+
+---
+
+**💡 Совет:** После пересоздания MongoDB сервиса восстановите данные из бэкапа:
+```bash
+railway run npm run restore
+```
+

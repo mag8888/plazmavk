@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Auth - Энергия денег</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+        }
+        .debug-section {
+            background: #2a2a3e;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .warning { color: #ffd43b; }
+        button {
+            background: #4c6ef5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #364fc7; }
+        pre { background: #000; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Auth - Диагностика авторизации</h1>
+    
+    <div class="debug-section">
+        <h3>1. Проверка localStorage</h3>
+        <div id="localStorageInfo"></div>
+        <button onclick="checkLocalStorage()">Проверить localStorage</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>2. Проверка API</h3>
+        <div id="apiInfo"></div>
+        <button onclick="checkAPI()">Проверить API</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>3. Тест авторизации</h3>
+        <div id="authTest"></div>
+        <button onclick="testAuth()">Тест авторизации</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>4. Тест профиля</h3>
+        <div id="profileTest"></div>
+        <button onclick="testProfile()">Тест профиля</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>5. Тест комнат</h3>
+        <div id="roomsTest"></div>
+        <button onclick="testRooms()">Тест комнат</button>
+    </div>
+
+    <script src="assets/js/modules/api/RoomApi.js"></script>
+    <script>
+        let api = null;
+        
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            element.innerHTML += `<div class="${className}">${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+        
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        function checkLocalStorage() {
+            clearLog('localStorageInfo');
+            const authToken = localStorage.getItem('authToken');
+            const user = localStorage.getItem('user');
+            
+            log('localStorageInfo', `Auth Token: ${authToken ? '✅ Есть' : '❌ Нет'}`, authToken ? 'success' : 'error');
+            log('localStorageInfo', `User: ${user ? '✅ Есть' : '❌ Нет'}`, user ? 'success' : 'error');
+            
+            if (authToken) {
+                log('localStorageInfo', `Token preview: ${authToken.substring(0, 20)}...`);
+            }
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    log('localStorageInfo', `User ID: ${userData.id || 'Нет ID'}`);
+                    log('localStorageInfo', `User Name: ${userData.first_name || 'Нет имени'} ${userData.last_name || ''}`);
+                } catch (e) {
+                    log('localStorageInfo', `Ошибка парсинга user: ${e.message}`, 'error');
+                }
+            }
+            
+            log('localStorageInfo', `Все ключи: ${Object.keys(localStorage).join(', ')}`);
+        }
+        
+        function checkAPI() {
+            clearLog('apiInfo');
+            
+            log('apiInfo', `RoomApi доступен: ${window.RoomApi ? '✅ Да' : '❌ Нет'}`, window.RoomApi ? 'success' : 'error');
+            
+            if (window.RoomApi) {
+                try {
+                    api = new window.RoomApi();
+                    log('apiInfo', `API создан: ✅`, 'success');
+                    log('apiInfo', `Base URL: ${api.baseUrl}`);
+                } catch (e) {
+                    log('apiInfo', `Ошибка создания API: ${e.message}`, 'error');
+                }
+            }
+        }
+        
+        async function testAuth() {
+            clearLog('authTest');
+            
+            const email = 'test@example.com';
+            const password = 'test123';
+            
+            try {
+                log('authTest', `Попытка входа: ${email}`);
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('authTest', `Вход успешен!`, 'success');
+                    log('authTest', `Token: ${data.accessToken.substring(0, 20)}...`);
+                    log('authTest', `User ID: ${data.user.id}`);
+                    
+                    // Сохраняем в localStorage
+                    localStorage.setItem('authToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    log('authTest', `Данные сохранены в localStorage`, 'success');
+                } else {
+                    log('authTest', `Ошибка входа: ${data.message}`, 'error');
+                }
+            } catch (e) {
+                log('authTest', `Ошибка сети: ${e.message}`, 'error');
+            }
+        }
+        
+        async function testProfile() {
+            clearLog('profileTest');
+            
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                log('profileTest', 'Нет токена авторизации', 'error');
+                return;
+            }
+            
+            try {
+                log('profileTest', `Запрос профиля с токеном: ${token.substring(0, 20)}...`);
+                
+                const response = await fetch('/api/user/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('profileTest', `Профиль получен!`, 'success');
+                    log('profileTest', `User ID: ${data.id}`);
+                    log('profileTest', `Name: ${data.first_name} ${data.last_name}`);
+                } else {
+                    const error = await response.text();
+                    log('profileTest', `Ошибка профиля: ${response.status} - ${error}`, 'error');
+                }
+            } catch (e) {
+                log('profileTest', `Ошибка сети: ${e.message}`, 'error');
+            }
+        }
+        
+        async function testRooms() {
+            clearLog('roomsTest');
+            
+            if (!api) {
+                log('roomsTest', 'API не инициализирован', 'error');
+                return;
+            }
+            
+            try {
+                log('roomsTest', `Запрос комнат через API...`);
+                const result = await api.listRooms();
+                log('roomsTest', `Комнаты получены!`, 'success');
+                log('roomsTest', `Количество комнат: ${Array.isArray(result) ? result.length : 'Не массив'}`);
+                log('roomsTest', `<pre>${JSON.stringify(result, null, 2)}</pre>`);
+            } catch (e) {
+                log('roomsTest', `Ошибка комнат: ${e.message}`, 'error');
+                log('roomsTest', `Stack: ${e.stack}`);
+            }
+        }
+        
+        // Автоматическая проверка при загрузке
+        window.addEventListener('load', () => {
+            checkLocalStorage();
+            checkAPI();
+        });
+    </script>
+</body>
+</html>

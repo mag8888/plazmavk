@@ -1,0 +1,41 @@
+# Игровые файлы (не нужны для бота)
+working.html
+index.html
+simple.html
+status.html
+test-server.html
+lobby.html
+
+# Серверные файлы (не нужны для бота)
+server.js
+
+# Документация
+README.md
+TECHNICAL_SPECIFICATIONS.md
+
+# Git файлы
+.git/
+.gitignore
+
+# Локальные файлы
+.env.local
+.env.development
+
+# Временные файлы
+*.tmp
+*.temp
+
+# Логи
+*.log
+logs/
+
+# IDE файлы
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS файлы
+.DS_Store
+Thumbs.db
+

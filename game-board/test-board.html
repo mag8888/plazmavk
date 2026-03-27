@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест нового Game Board v2.0</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .test-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .test-controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .status-panel {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-left: auto;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .status-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .status-value {
+            color: #6c757d;
+        }
+        
+        #game-board-container {
+            min-height: 600px;
+        }
+        
+        .log-panel {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .log-entry {
+            background: white;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border-left: 3px solid #007bff;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .log-entry.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .log-entry.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🎮 Тест нового Game Board v2.0</h1>
+            <p>Тестирование обновленной системы игрового поля</p>
+        </div>
+        
+        <div class="test-controls">
+            <button id="init-btn" class="btn btn-success">🚀 Инициализировать</button>
+            <button id="start-game-btn" class="btn" disabled>🎯 Начать игру</button>
+            <button id="roll-dice-btn" class="btn" disabled>🎲 Бросить кубик</button>
+            <button id="next-turn-btn" class="btn" disabled>➡️ Следующий ход</button>
+            <button id="pause-btn" class="btn btn-warning" disabled>⏸️ Пауза</button>
+            <button id="reset-btn" class="btn btn-danger">🔄 Сброс</button>
+            
+            <div class="status-panel">
+                <div class="status-item">
+                    <span class="status-label">Статус:</span>
+                    <span class="status-value" id="status-value">Не инициализирован</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Игроков:</span>
+                    <span class="status-value" id="players-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Ход:</span>
+                    <span class="status-value" id="turn-number">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="game-board-container"></div>
+        
+        <div class="log-panel">
+            <div class="log-title">📋 Лог событий</div>
+            <div id="log-container"></div>
+        </div>
+    </div>
+
+    <!-- Подключаем компоненты Game Board -->
+    <script src="GameBoardService.js"></script>
+    <script src="GameBoardUI.js"></script>
+    <script src="GameBoardManager.js"></script>
+
+    <script>
+        // Глобальные переменные
+        let gameManager = null;
+        let testPlayers = [
+            { name: 'Алиса', _id: 'player1' },
+            { name: 'Боб', _id: 'player2' },
+            { name: 'Чарли', _id: 'player3' },
+            { name: 'Диана', _id: 'player4' }
+        ];
+
+        // Элементы интерфейса
+        const initBtn = document.getElementById('init-btn');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const rollDiceBtn = document.getElementById('roll-dice-btn');
+        const nextTurnBtn = document.getElementById('next-turn-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        const statusValue = document.getElementById('status-value');
+        const playersCount = document.getElementById('players-count');
+        const turnNumber = document.getElementById('turn-number');
+        const logContainer = document.getElementById('log-container');
+
+        // Функция логирования
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Функция обновления статуса
+        function updateStatus() {
+            if (!gameManager) {
+                statusValue.textContent = 'Не инициализирован';
+                playersCount.textContent = '0';
+                turnNumber.textContent = '0';
+                return;
+            }
+
+            const stats = gameManager.getGameStats();
+            statusValue.textContent = stats.gamePhase;
+            playersCount.textContent = stats.activePlayers;
+            turnNumber.textContent = stats.turnNumber;
+        }
+
+        // Инициализация
+        initBtn.addEventListener('click', async () => {
+            try {
+                log('Инициализация Game Board Manager...', 'info');
+                
+                gameManager = new GameBoardManager('game-board-container');
+                
+                // Ждем инициализации
+                await new Promise(resolve => {
+                    const checkInit = () => {
+                        if (gameManager.isInitialized) {
+                            resolve();
+                        } else {
+                            setTimeout(checkInit, 100);
+                        }
+                    };
+                    checkInit();
+                });
+                
+                // Настраиваем обработчики событий
+                gameManager.on('managerReady', () => {
+                    log('Game Board Manager готов!', 'success');
+                    initBtn.disabled = true;
+                    startGameBtn.disabled = false;
+                    updateStatus();
+                });
+                
+                gameManager.on('gameStarted', (data) => {
+                    log(`Игра начата с ${data.players.length} игроками`, 'success');
+                    rollDiceBtn.disabled = false;
+                    nextTurnBtn.disabled = false;
+                    pauseBtn.disabled = false;
+                    updateStatus();
+                });
+                
+                gameManager.on('error', (data) => {
+                    log(`Ошибка: ${data.error.message}`, 'error');
+                });
+                
+                log('Инициализация завершена', 'success');
+                
+            } catch (error) {
+                log(`Ошибка инициализации: ${error.message}`, 'error');
+            }
+        });
+
+        // Начало игры
+        startGameBtn.addEventListener('click', () => {
+            try {
+                log('Начало новой игры...', 'info');
+                gameManager.startGame(testPlayers);
+            } catch (error) {
+                log(`Ошибка начала игры: ${error.message}`, 'error');
+            }
+        });
+
+        // Бросок кубика
+        rollDiceBtn.addEventListener('click', () => {
+            try {
+                const result = gameManager.rollDiceAndMove();
+                if (result) {
+                    log(`Кубик: ${result.diceResult.total}, Игрок: ${result.moveResult.player}`, 'info');
+                    updateStatus();
+                }
+            } catch (error) {
+                log(`Ошибка хода: ${error.message}`, 'error');
+            }
+        });
+
+        // Следующий ход
+        nextTurnBtn.addEventListener('click', () => {
+            try {
+                const currentPlayer = gameManager.service.getCurrentPlayer();
+                gameManager.service.nextTurn();
+                const newPlayer = gameManager.service.getCurrentPlayer();
+                log(`Ход передан от ${currentPlayer.name} к ${newPlayer.name}`, 'info');
+                updateStatus();
+            } catch (error) {
+                log(`Ошибка передачи хода: ${error.message}`, 'error');
+            }
+        });
+
+        // Пауза
+        pauseBtn.addEventListener('click', () => {
+            try {
+                const phase = gameManager.togglePause();
+                log(`Игра ${phase === 'paused' ? 'приостановлена' : 'возобновлена'}`, 'warning');
+                updateStatus();
+            } catch (error) {
+                log(`Ошибка паузы: ${error.message}`, 'error');
+            }
+        });
+
+        // Сброс
+        resetBtn.addEventListener('click', () => {
+            try {
+                if (gameManager) {
+                    gameManager.resetGame();
+                    log('Игра сброшена', 'warning');
+                }
+                
+                // Сброс кнопок
+                initBtn.disabled = false;
+                startGameBtn.disabled = true;
+                rollDiceBtn.disabled = true;
+                nextTurnBtn.disabled = true;
+                pauseBtn.disabled = true;
+                
+                updateStatus();
+            } catch (error) {
+                log(`Ошибка сброса: ${error.message}`, 'error');
+            }
+        });
+
+        // Автообновление статуса
+        setInterval(updateStatus, 1000);
+
+        // Инициализация при загрузке
+        log('Страница загружена. Нажмите "Инициализировать" для начала тестирования.', 'info');
+    </script>
+</body>
+</html>

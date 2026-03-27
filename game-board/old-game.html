@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игровая доска - Game Board v2.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1d24 25%, #242830 50%, #1a1d24 75%, #0f1419 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 150, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 100, 200, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(100, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px;
+            position: relative;
+            z-index: 2;
+            padding-bottom: 80px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+            min-height: calc(100vh - 32px);
+        }
+
+        .game-board-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-board-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.03) 0%, rgba(0, 191, 255, 0.02) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95) 0%, rgba(36, 40, 48, 0.9) 100%);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            height: fit-content;
+            position: sticky;
+            top: 16px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-title .icon {
+            font-size: 16px;
+        }
+
+        .financial-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px 0;
+        }
+
+        .financial-label {
+            font-size: 12px;
+            color: #a0a0a0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .financial-value {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .financial-value.income {
+            color: #00ff96;
+        }
+
+        .financial-value.expense {
+            color: #ff6b6b;
+        }
+
+        .financial-value.credit {
+            color: #00bfff;
+        }
+
+        .financial-value.assets {
+            color: #00ff96;
+        }
+
+        .btn-sidebar {
+            width: 100%;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-sidebar.primary {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+        }
+
+        .btn-sidebar.secondary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: #ffffff;
+        }
+
+        .btn-sidebar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .turn-status {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .turn-status-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .turn-status-subtext {
+            font-size: 10px;
+            color: #e0e0e0;
+        }
+
+        .turn-timer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #a0a0a0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .game-title {
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+            color: #ffffff;
+        }
+
+        .game-board {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-board::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 150, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 191, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .board-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 600px;
+            margin: 0 auto;
+            z-index: 2;
+        }
+
+        .board-grid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+        }
+
+        .special-cell {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            color: #ffffff;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 3;
+        }
+
+        .special-cell.big-deal {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00bfff 0%, #0099cc 100%);
+        }
+
+        .special-cell.small-deal {
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        }
+
+        .special-cell.expenses {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+        }
+
+        .special-cell.market {
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #a8e6cf 0%, #7fcdcd 100%);
+        }
+
+        .special-cell-title {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .special-cell-cards {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 2px;
+        }
+
+        .special-cell-discard {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 8px;
+            color: #ffffff;
+            min-height: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell-number {
+            font-size: 10px;
+            font-weight: 800;
+            margin-bottom: 1px;
+        }
+
+        .cell-icon {
+            font-size: 10px;
+            margin-bottom: 1px;
+        }
+
+        .cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell.start {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a1d24;
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            font-size: 16px;
+            font-weight: 900;
+            position: relative;
+            z-index: 4;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            margin: auto;
+        }
+
+        .cell.start::before {
+            content: '$';
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffd700;
+        }
+
+        .cell.start::after {
+            content: '$';
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffd700;
+        }
+
+        .start-symbols {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .start-symbols-row {
+            display: flex;
+            gap: 4px;
+        }
+
+        .start-symbol {
+            font-size: 12px;
+            color: #1a1d24;
+            font-weight: 900;
+        }
+
+        .cell.money {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a1d24;
+        }
+
+        .cell.growth {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+        }
+
+        .cell.expense {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: #ffffff;
+        }
+
+        .cell.card {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: #ffffff;
+        }
+
+        .cell.market {
+            background: linear-gradient(135deg, #a8e6cf 0%, #7fcdcd 100%);
+            color: #1a1d24;
+        }
+
+        .cell.timer {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #1a1d24;
+        }
+
+        .cell.special {
+            background: linear-gradient(135deg, #00bfff 0%, #0099cc 100%);
+            color: #ffffff;
+        }
+
+        .player-token {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 10px;
+            color: #1a1d24;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-1 { background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%); }
+        .player-2 { background: linear-gradient(135deg, #00bfff 0%, #0099cc 100%); }
+        .player-3 { background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%); }
+        .player-4 { background: linear-gradient(135deg, #ffd93d 0%, #ffb347 100%); }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .dice {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: #1a1d24;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .dice:hover {
+            transform: scale(1.1);
+        }
+
+        .dice.rolling {
+            animation: diceRoll 0.6s ease-in-out;
+        }
+
+        @keyframes diceRoll {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(90deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+            75% { transform: scale(1.2) rotate(270deg); }
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-card h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #a0a0a0;
+            margin-bottom: 4px;
+        }
+
+        .info-card p {
+            font-size: 18px;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95) 0%, rgba(36, 40, 48, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 16px;
+            z-index: 1000;
+        }
+
+        .mobile-nav-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+        }
+
+        .mobile-nav-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            text-decoration: none;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mobile-nav-btn.active {
+            background: linear-gradient(135deg, #00ff96 0%, #00d4aa 100%);
+            color: #1a1d24;
+        }
+
+        @media (min-width: 769px) {
+            .board-grid {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 6px;
+            }
+
+            .cell {
+                font-size: 12px;
+                min-height: 50px;
+            }
+
+            .player-token {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+
+            .dice {
+                width: 80px;
+                height: 80px;
+                font-size: 32px;
+            }
+
+            .game-info {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .mobile-nav {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding-bottom: 80px;
+            }
+
+            .sidebar {
+                position: static;
+                order: -1;
+            }
+
+            .game-board-container {
+                padding: 16px;
+            }
+
+            .board-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 4px;
+            }
+
+            .cell {
+                min-height: 40px;
+                font-size: 10px;
+            }
+
+            .sidebar-section {
+                margin-bottom: 16px;
+                padding-bottom: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-board-container">
+            <div class="header">
+                <h1 class="game-title">🎮 Game Board v2.0</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="pause-btn">⏸️ Пауза</button>
+                    <button class="btn btn-secondary" id="settings-btn">⚙️</button>
+                    <button class="btn btn-danger" id="exit-btn">🚪 Выйти</button>
+                </div>
+            </div>
+
+            <div class="game-board">
+                <div class="board-container">
+                    <!-- Специальные ячейки по бокам -->
+                    <div class="special-cell big-deal">
+                        <div class="special-cell-title">Большая сделка</div>
+                        <div class="special-cell-cards">24 карт</div>
+                        <div class="special-cell-discard">Отбой: 0</div>
+                    </div>
+                    
+                    <div class="special-cell small-deal">
+                        <div class="special-cell-title">Малая сделка</div>
+                        <div class="special-cell-cards">62 карт</div>
+                    </div>
+                    
+                    <div class="special-cell expenses">
+                        <div class="special-cell-title">Расходы</div>
+                        <div class="special-cell-cards">24 карт</div>
+                        <div class="special-cell-discard">Отбой: 0</div>
+                    </div>
+                    
+                    <div class="special-cell market">
+                        <div class="special-cell-title">Рынок</div>
+                        <div class="special-cell-cards">24 карт</div>
+                        <div class="special-cell-discard">Отбой: 0</div>
+                    </div>
+                    
+                    <!-- Игровое поле -->
+                    <div class="board-grid" id="board-grid"></div>
+                </div>
+
+            <div class="game-controls">
+                <div class="dice" id="dice">🎲</div>
+                <button class="btn btn-primary" id="roll-btn">Бросить кубик</button>
+            </div>
+
+            <div class="game-info">
+                <div class="info-card">
+                    <h3>Игрок</h3>
+                    <p id="current-player">1</p>
+                </div>
+                <div class="info-card">
+                    <h3>Ход</h3>
+                    <p id="current-turn">1</p>
+                </div>
+                <div class="info-card">
+                    <h3>Позиция</h3>
+                    <p id="current-position">1</p>
+                </div>
+                <div class="info-card">
+                    <h3>Результат</h3>
+                    <p id="dice-result">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Боковая панель -->
+        <div class="sidebar">
+            <!-- Статус хода -->
+            <div class="turn-status">
+                <div class="turn-status-text">ОЖИДАНИЕ ХОДА</div>
+                <div class="turn-status-subtext">НЕ ВАШ ход</div>
+            </div>
+            <div class="turn-timer">
+                <span>🕐</span>
+                <span>Время хода</span>
+            </div>
+
+            <!-- Финансовая информация -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span class="icon">💰</span>
+                    <span>Финансы</span>
+                </div>
+                <div class="financial-item">
+                    <div class="financial-label">
+                        <span>📈</span>
+                        <span>Доход:</span>
+                    </div>
+                    <div class="financial-value income">$0</div>
+                </div>
+                <div class="financial-item">
+                    <div class="financial-label">
+                        <span>📉</span>
+                        <span>Расходы:</span>
+                    </div>
+                    <div class="financial-value expense">$0</div>
+                </div>
+                <div class="financial-item">
+                    <div class="financial-label">
+                        <span>💵</span>
+                        <span>$ PAYDAY:</span>
+                    </div>
+                    <div class="financial-value">$0/мес</div>
+                </div>
+            </div>
+
+            <!-- Кредит -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span class="icon">🏦</span>
+                    <span>Кредит:</span>
+                </div>
+                <div class="financial-item">
+                    <div class="financial-label">Кредит:</div>
+                    <div class="financial-value credit">$0</div>
+                </div>
+                <div class="financial-item">
+                    <div class="financial-label">Макс. кредит:</div>
+                    <div class="financial-value credit">$0</div>
+                </div>
+                <button class="btn-sidebar primary">
+                    <span>✅</span>
+                    <span>Без кредитов</span>
+                </button>
+                <button class="btn-sidebar secondary">
+                    <span>📊</span>
+                    <span>Взять</span>
+                </button>
+                <div style="font-size: 10px; color: #a0a0a0; text-align: center; margin-top: 8px;">
+                    Нажмите для открытия банковских операций
+                </div>
+            </div>
+
+            <!-- Активы -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span class="icon">📁</span>
+                    <span>Активы</span>
+                </div>
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <div class="financial-value assets" style="font-size: 24px;">$0</div>
+                    <div style="font-size: 12px; color: #a0a0a0;">Доход: $0/мес</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-nav">
+        <div class="mobile-nav-buttons">
+            <a href="index.html" class="mobile-nav-btn">
+                <span>🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="lobby.html" class="mobile-nav-btn">
+                <span>🎮</span>
+                <span>Лобби</span>
+            </a>
+            <a href="game.html" class="mobile-nav-btn active">
+                <span>🎯</span>
+                <span>Игра</span>
+            </a>
+            <a href="auth.html" class="mobile-nav-btn">
+                <span>👤</span>
+                <span>Профиль</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, что игрок находится в комнате
+            const currentRoom = localStorage.getItem('currentRoom');
+            if (!currentRoom) {
+                alert('Вы не находитесь в комнате. Переход в лобби...');
+                window.location.href = 'lobby.html';
+                return;
+            }
+
+            const room = JSON.parse(currentRoom);
+            const username = localStorage.getItem('username') || 'Гость';
+            
+            // Проверяем, что пользователь в списке игроков комнаты
+            const player = room.players.find(p => p.name === username);
+            if (!player) {
+                alert('Вы не являетесь участником этой комнаты. Переход в лобби...');
+                window.location.href = 'lobby.html';
+                return;
+            }
+
+            // Инициализируем игровое состояние
+            let currentPlayer = 1;
+            let currentTurn = 1;
+            let playerPositions = [0, 0, 0, 0];
+            let isRolling = false;
+            let totalCells = 76;
+            let gameStarted = false;
+            let allPlayersReady = false;
+
+            // Обновляем заголовок с информацией о комнате
+            document.querySelector('.game-title').textContent = `🎮 ${room.name}`;
+            
+            // Проверяем готовность всех игроков
+            function checkPlayersReady() {
+                return room.players.length >= 2; // Минимум 2 игрока
+            }
+
+            function updatePlayersInfo() {
+                // Обновляем информацию о игроках в интерфейсе
+                const playersInfo = room.players.map(p => p.name).join(', ');
+                document.querySelector('.game-title').textContent = `🎮 ${room.name} (${playersInfo})`;
+                
+                // Показываем кнопку старта только если игрок - хост и готово 2+ игрока
+                const hostPlayer = room.players.find(p => p.isHost);
+                if (hostPlayer && hostPlayer.name === username && checkPlayersReady()) {
+                    showStartButton();
+                }
+            }
+
+            function showStartButton() {
+                const headerActions = document.querySelector('.header-actions');
+                const existingStartBtn = document.getElementById('start-game-btn');
+                
+                if (!existingStartBtn && !gameStarted) {
+                    const startBtn = document.createElement('button');
+                    startBtn.id = 'start-game-btn';
+                    startBtn.className = 'btn btn-primary';
+                    startBtn.innerHTML = '🚀 Начать игру';
+                    startBtn.addEventListener('click', startGame);
+                    headerActions.insertBefore(startBtn, headerActions.firstChild);
+                }
+            }
+
+            function startGame() {
+                if (gameStarted) return;
+                
+                const hostPlayer = room.players.find(p => p.isHost);
+                if (!hostPlayer || hostPlayer.name !== username) {
+                    alert('Только хост может начать игру');
+                    return;
+                }
+
+                if (!checkPlayersReady()) {
+                    alert('Для начала игры нужно минимум 2 игрока');
+                    return;
+                }
+
+                gameStarted = true;
+                allPlayersReady = true;
+                
+                // Обновляем статус комнаты
+                room.status = 'playing';
+                localStorage.setItem('currentRoom', JSON.stringify(room));
+                
+                // Удаляем кнопку старта
+                const startBtn = document.getElementById('start-game-btn');
+                if (startBtn) {
+                    startBtn.remove();
+                }
+                
+                // Показываем сообщение о начале игры
+                alert('🎮 Игра началась! Удачной игры!');
+                
+                // Инициализируем игровое поле
+                initBoard();
+                updateGameInfo();
+            }
+
+            function initBoard() {
+                const boardGrid = document.getElementById('board-grid');
+                boardGrid.innerHTML = '';
+
+                // Создаем спиральный путь
+                const spiralPath = createSpiralPath();
+                
+                spiralPath.forEach((cellData, index) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    if (cellData) {
+                        if (cellData.type === 'start') {
+                            cell.classList.add('start');
+                            cell.innerHTML = `
+                                <div class="start-symbols">
+                                    <div class="start-symbols-row">
+                                        <span class="start-symbol">$</span>
+                                        <span class="start-symbol">$</span>
+                                    </div>
+                                    <div class="start-symbols-row">
+                                        <span class="start-symbol">$</span>
+                                        <span class="start-symbol">$</span>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            cell.innerHTML = `
+                                <div class="cell-number">${cellData.number}</div>
+                                <div class="cell-icon">${cellData.icon}</div>
+                            `;
+                            cell.classList.add(cellData.type);
+                        }
+                    }
+                    
+                    boardGrid.appendChild(cell);
+                });
+                
+                // Инициализируем токены игроков
+                initPlayerTokens();
+            }
+
+            function createSpiralPath() {
+                const path = [];
+                const gridSize = 10;
+                const totalCells = gridSize * gridSize;
+                
+                // Создаем пустую сетку
+                for (let i = 0; i < totalCells; i++) {
+                    path.push(null);
+                }
+                
+                // Спиральный путь от центра
+                const center = Math.floor(gridSize / 2);
+                const types = ['money', 'growth', 'expense', 'card', 'market', 'timer'];
+                const icons = ['💰', '📈', '💸', '🃏', '🏪', '⏰'];
+                
+                let x = center;
+                let y = center;
+                let direction = 0; // 0: right, 1: down, 2: left, 3: up
+                let steps = 1;
+                let stepCount = 0;
+                let cellNumber = 1;
+                
+                // Центральная ячейка
+                path[y * gridSize + x] = {
+                    number: 1,
+                    type: 'start',
+                    icon: '1'
+                };
+                cellNumber++;
+                
+                // Спираль наружу - более четкий путь
+                while (cellNumber <= 76) {
+                    for (let i = 0; i < steps; i++) {
+                        // Двигаемся в текущем направлении
+                        switch (direction) {
+                            case 0: x++; break;
+                            case 1: y++; break;
+                            case 2: x--; break;
+                            case 3: y--; break;
+                        }
+                        
+                        // Проверяем границы
+                        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize && cellNumber <= 76) {
+                            const typeIndex = (cellNumber - 2) % types.length;
+                            path[y * gridSize + x] = {
+                                number: cellNumber,
+                                type: types[typeIndex],
+                                icon: icons[typeIndex]
+                            };
+                            cellNumber++;
+                        }
+                    }
+                    
+                    // Поворачиваем
+                    direction = (direction + 1) % 4;
+                    stepCount++;
+                    
+                    // Увеличиваем шаги каждые 2 поворота
+                    if (stepCount % 2 === 0) {
+                        steps++;
+                    }
+                }
+                
+                return path;
+            }
+
+            // Инициализация токенов игроков
+            function initPlayerTokens() {
+                const startCell = document.querySelector('.cell.start');
+                if (startCell) {
+                    for (let i = 1; i <= 4; i++) {
+                        const token = document.createElement('div');
+                        token.className = `player-token player-${i}`;
+                    token.textContent = i;
+                    token.id = `player-${i}-token`;
+                    startCell.appendChild(token);
+                }
+            }
+
+            function rollDice() {
+                if (isRolling) return;
+                
+                isRolling = true;
+                const dice = document.getElementById('dice');
+                const rollBtn = document.getElementById('roll-btn');
+                
+                dice.classList.add('rolling');
+                rollBtn.disabled = true;
+                rollBtn.textContent = 'Бросаем...';
+
+                setTimeout(() => {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    dice.textContent = roll === 6 ? '🎲' : roll;
+                    dice.classList.remove('rolling');
+                    
+                    document.getElementById('dice-result').textContent = roll;
+                    movePlayer(roll);
+                    
+                    isRolling = false;
+                    rollBtn.disabled = false;
+                    rollBtn.textContent = 'Бросить кубик';
+                }, 600);
+            }
+
+            function movePlayer(steps) {
+                const oldPosition = playerPositions[currentPlayer - 1];
+                playerPositions[currentPlayer - 1] = Math.min(oldPosition + steps, totalCells - 1);
+                const newPosition = playerPositions[currentPlayer - 1];
+
+                const token = document.getElementById(`player-${currentPlayer}-token`);
+                const oldCell = document.getElementById('board-grid').children[oldPosition];
+                const newCell = document.getElementById('board-grid').children[newPosition];
+                
+                if (oldCell.contains(token)) {
+                    oldCell.removeChild(token);
+                }
+                newCell.appendChild(token);
+
+                updateGameInfo();
+
+                if (newPosition === totalCells - 1) {
+                    alert(`🎉 Игрок ${currentPlayer} выиграл!`);
+                    resetGame();
+                    return;
+                }
+
+                if (steps !== 6) {
+                    currentPlayer = currentPlayer === 4 ? 1 : currentPlayer + 1;
+                    if (currentPlayer === 1) currentTurn++;
+                }
+            }
+
+            function updateGameInfo() {
+                document.getElementById('current-player').textContent = currentPlayer;
+                document.getElementById('current-turn').textContent = currentTurn;
+                document.getElementById('current-position').textContent = playerPositions[currentPlayer - 1] + 1;
+            }
+
+            function resetGame() {
+                currentPlayer = 1;
+                currentTurn = 1;
+                playerPositions = [0, 0, 0, 0];
+                
+                for (let i = 1; i <= 4; i++) {
+                    const token = document.getElementById(`player-${i}-token`);
+                    const startCell = document.getElementById('board-grid').children[0];
+                    if (token && startCell) {
+                        startCell.appendChild(token);
+                    }
+                }
+                
+                updateGameInfo();
+                document.getElementById('dice-result').textContent = '-';
+            }
+
+            document.getElementById('roll-btn').addEventListener('click', rollDice);
+            document.getElementById('dice').addEventListener('click', rollDice);
+            document.getElementById('pause-btn').addEventListener('click', () => alert('⏸️ Игра приостановлена'));
+            document.getElementById('exit-btn').addEventListener('click', () => {
+                if (confirm('🚪 Вы уверены, что хотите выйти из игры?')) {
+                    // Очищаем данные о текущей комнате
+                    localStorage.removeItem('currentRoom');
+                    window.location.href = 'lobby.html';
+                }
+            });
+
+            // Инициализируем интерфейс
+            updatePlayersInfo();
+            
+            // Если игра уже началась, инициализируем доску
+            if (room.status === 'playing') {
+                gameStarted = true;
+                allPlayersReady = true;
+                initBoard();
+                updateGameInfo();
+            }
+        });
+    </script>
+</body>
+</html>

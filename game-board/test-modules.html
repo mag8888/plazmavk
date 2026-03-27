@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест модулей</title>
+</head>
+<body>
+    <h1>Тест загрузки модулей</h1>
+    <div id="status">Загрузка...</div>
+    
+    <script type="module">
+        console.log('=== Тест модулей ===');
+        
+        try {
+            console.log('Импортируем RoomApi...');
+            const RoomApiModule = await import('./assets/js/modules/api/RoomApi.esm.js');
+            console.log('✅ RoomApi загружен:', RoomApiModule);
+            
+            console.log('Импортируем LobbyModule...');
+            const LobbyModule = await import('./assets/js/modules/lobby/LobbyModule.js?v=1');
+            console.log('✅ LobbyModule загружен:', LobbyModule);
+            
+            document.getElementById('status').textContent = 'Все модули загружены успешно!';
+            document.getElementById('status').style.color = 'green';
+            
+        } catch (error) {
+            console.error('❌ Ошибка загрузки модулей:', error);
+            document.getElementById('status').textContent = 'Ошибка: ' + error.message;
+            document.getElementById('status').style.color = 'red';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовая страница</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .test-section {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 0.5rem;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .info {
+            background: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .feature {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Тестовая страница</h1>
+        <p class="subtitle">Добро пожаловать! Это простая тестовая страница для проверки функциональности.</p>
+        
+        <div class="test-section">
+            <h3>🧪 Тестирование функций</h3>
+            <button class="test-button" onclick="testAlert()">Тест уведомления</button>
+            <button class="test-button" onclick="testDate()">Показать дату</button>
+            <button class="test-button" onclick="testMath()">Математический тест</button>
+            <div id="status"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎮 Игровые модули</h3>
+            <button class="test-button" onclick="openGameTable()">🎲 Игровой стол</button>
+            <button class="test-button" onclick="openBank()">🏦 Банк</button>
+            <p style="margin-top: 10px; color: #718096; font-size: 14px;">
+                Откройте настольную игру "Энергия денег" с полным функционалом
+            </p>
+        </div>
+
+        <div class="test-section" id="authSection">
+            <h3>👤 Пользователь</h3>
+            <div id="userInfo" style="display: none;">
+                <p style="color: #10b981; margin-bottom: 15px;">Добро пожаловать, <span id="userName"></span>!</p>
+                <button class="test-button" onclick="openProfile()">👤 Профиль</button>
+                <button class="test-button" onclick="logout()" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">🚪 Выйти</button>
+            </div>
+            <div id="loginPrompt">
+                <button class="test-button" onclick="openAuth()">🔐 Войти / Регистрация</button>
+                <p style="margin-top: 10px; color: #718096; font-size: 14px;">
+                    Войдите в систему для сохранения прогресса и участия в рейтингах
+                </p>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <h4>Адаптивный дизайн</h4>
+                <p>Страница корректно отображается на всех устройствах</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎨</div>
+                <h4>Современный UI</h4>
+                <p>Красивый и интуитивный интерфейс</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h4>Быстрая загрузка</h4>
+                <p>Оптимизированный код для быстрой работы</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testAlert() {
+            alert('✅ Уведомление работает корректно!');
+            showStatus('Уведомление успешно показано', 'success');
+        }
+
+        function testDate() {
+            const now = new Date();
+            const dateString = now.toLocaleString('ru-RU');
+            showStatus(`Текущая дата и время: ${dateString}`, 'info');
+        }
+
+        function testMath() {
+            const a = Math.floor(Math.random() * 100);
+            const b = Math.floor(Math.random() * 100);
+            const result = a + b;
+            showStatus(`Математический тест: ${a} + ${b} = ${result}`, 'success');
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            
+            // Автоматически скрыть через 3 секунды
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function openGameTable() {
+            window.open('/table', '_blank');
+            showStatus('Игровой стол открыт в новой вкладке!', 'success');
+        }
+
+        function openBank() {
+            // Используем новый банковский модуль v4
+            if (typeof window.openBankV4 === 'function') {
+                window.openBankV4();
+                showStatus('Банковский модуль v4 открыт!', 'success');
+            } else {
+                window.open('/bank', '_blank');
+                showStatus('Банк открыт в новой вкладке!', 'success');
+            }
+        }
+
+        function openAuth() {
+            window.location.href = '/auth';
+        }
+
+        function openProfile() {
+            window.location.href = '/profile';
+        }
+
+        function logout() {
+            if (confirm('Вы уверены, что хотите выйти?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                checkAuthStatus();
+                showStatus('Вы успешно вышли из системы', 'success');
+            }
+        }
+
+        function checkAuthStatus() {
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                try {
+                    const userData = JSON.parse(user);
+                    document.getElementById('userName').textContent = userData.first_name;
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('loginPrompt').style.display = 'none';
+                    
+                    // Автоматически перенаправляем авторизованных пользователей в лобби
+                    setTimeout(() => {
+                        window.location.href = '/lobby';
+                    }, 2000);
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('user');
+                }
+            } else {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('loginPrompt').style.display = 'block';
+            }
+        }
+
+        // Показать время загрузки страницы
+        window.addEventListener('load', function() {
+            const loadTime = performance.now();
+            showStatus(`Страница загружена за ${Math.round(loadTime)}мс`, 'info');
+            checkAuthStatus();
+        });
+    </script>
+    
+    <!-- Bank Module v4 -->
+    <link rel="stylesheet" href="bank-module-v4/bank-styles-v4.css?v=4.1">
+    <script src="bank-module-v4/bank-module-v4.js?v=4.1"></script>
+    <script src="bank-module-v4/integration.js?v=4.1"></script>
+</body>
+</html>

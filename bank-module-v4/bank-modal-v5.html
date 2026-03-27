@@ -1,0 +1,316 @@
+<!-- Bank Module v5 Modal - Optimized HTML Structure -->
+<div id="bankModal" class="bank-modal" style="display: none;">
+    <div class="bank-modal-content">
+        <!-- Header -->
+        <div class="bank-modal-header">
+            <div class="bank-header-left">
+                <div class="bank-icon">🏦</div>
+                <h2 class="bank-modal-title">
+                    Банковские операции 
+                    <span style="color: #ff6b6b; font-size: 12px; font-weight: normal;">[v5-OPTIMIZED]</span>
+                </h2>
+            </div>
+            <button class="bank-modal-close" onclick="closeBankV5()" aria-label="Закрыть банк">
+                &times;
+            </button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="bank-modal-body">
+            <!-- Left Column - Financial Summary -->
+            <div class="bank-info-column">
+                <!-- Bank Status -->
+                <div class="bank-status-section">
+                    <div class="bank-status-header">
+                        <div class="bank-icon-small">🏦</div>
+                        <span class="bank-status-label">Банк</span>
+                        <span class="bank-status-badge active">Активен</span>
+                    </div>
+                </div>
+                
+                <!-- Current Balance -->
+                <div class="balance-section">
+                    <div class="current-balance" id="currentBalance">$0</div>
+                    <div class="balance-label">Доступно для операций</div>
+                </div>
+                
+                <!-- Financial Details -->
+                <div class="financial-details">
+                    <div class="financial-header">
+                        <div class="bank-icon-small">💰</div>
+                        <span>Финансовые детали</span>
+                    </div>
+                    <div class="financial-item expandable" onclick="toggleIncomeDetails()">
+                        <span class="financial-label">Доходы:</span>
+                        <span class="financial-value income" id="totalIncomeAmount">$0</span>
+                        <span class="expand-icon" id="incomeExpandIcon">▶</span>
+                    </div>
+                    <div class="income-details" id="incomeDetails" style="display: none;">
+                        <div class="financial-subitem">
+                            <span class="financial-label">Зарплата:</span>
+                            <span class="financial-value income" id="salaryAmount">$0</span>
+                        </div>
+                        <div class="financial-subitem">
+                            <span class="financial-label">Пассивный доход:</span>
+                            <span class="financial-value income" id="passiveIncomeAmount">$0</span>
+                        </div>
+                        <div class="assets-income" id="assetsIncomeList">
+                            <!-- Активы будут добавлены динамически -->
+                        </div>
+                    </div>
+                    <div class="financial-item expandable" onclick="toggleExpensesDetails()">
+                        <span class="financial-label">Расходы:</span>
+                        <span class="financial-value expense" id="totalExpensesAmount">$0</span>
+                        <span class="expand-icon" id="expensesExpandIcon">▶</span>
+                    </div>
+                    <div class="expenses-details" id="expensesDetails" style="display: none;">
+                        <div class="financial-subitem">
+                            <span class="financial-label">Базовые расходы:</span>
+                            <span class="financial-value expense" id="baseExpensesAmount">$0</span>
+                        </div>
+                        <div class="financial-subitem">
+                            <span class="financial-label">Расходы на детей:</span>
+                            <span class="financial-value expense" id="childrenExpensesAmount">$0</span>
+                        </div>
+                        <div class="financial-subitem">
+                            <span class="financial-label">Платежи по кредитам:</span>
+                            <span class="financial-value expense" id="creditPaymentAmount">$0</span>
+                        </div>
+                        <div class="profession-expenses" id="professionExpensesList">
+                            <!-- Детали расходов из карточки профессии будут добавлены динамически -->
+                        </div>
+                    </div>
+                    <div class="financial-item total">
+                        <span class="financial-label">Чистый доход:</span>
+                        <span class="financial-value income" id="netIncomeAmount">$0</span>
+                    </div>
+                    <div class="payday-info">
+                        <span class="payday-label">PAYDAY:</span>
+                        <span class="payday-amount" id="paydayAmount">$0/мес</span>
+                    </div>
+                </div>
+                
+                <!-- Credit Information -->
+                <div class="credit-info">
+                    <div class="credit-header">
+                        <div class="bank-icon-small">🏦</div>
+                        <span>Кредитная информация</span>
+                    </div>
+                    <div class="credit-item">
+                        <span class="credit-label">Текущий долг:</span>
+                        <span class="credit-value" id="currentDebt">$0</span>
+                    </div>
+                    <div class="credit-item">
+                        <span class="credit-label">Максимальный лимит:</span>
+                        <span class="credit-value" id="maxLimit">$0</span>
+                    </div>
+                    <div class="credit-item">
+                        <span class="credit-label">Свободный лимит:</span>
+                        <span class="credit-value available" id="freeLimit">$0</span>
+                    </div>
+                    <div class="credit-rule">
+                        Каждые $1000 кредита уменьшают PAYDAY на $100/мес
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Operations -->
+            <div class="bank-operations-column">
+                <!-- Transfer Section -->
+                <div class="transfer-section">
+                    <div class="section-header">
+                        <div class="bank-icon-small">💸</div>
+                        <span>Переводы</span>
+                    </div>
+                    <form class="transfer-form" onsubmit="executeTransferV5(event)">
+                        <div class="form-group">
+                            <label for="recipientSelect">Получатель:</label>
+                            <select id="recipientSelect" class="form-select" required>
+                                <option value="">Выберите получателя</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="transferAmount">Сумма:</label>
+                            <input 
+                                type="number" 
+                                id="transferAmount" 
+                                class="form-input" 
+                                placeholder="0" 
+                                min="1" 
+                                step="1"
+                                required
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            Отправить
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Credit Section -->
+                <div class="credit-section">
+                    <div class="section-header">
+                        <div class="bank-icon-small">💳</div>
+                        <span>Кредиты</span>
+                    </div>
+                    <div class="credit-actions">
+                        <div class="form-group">
+                            <label for="creditAmount">Сумма кредита:</label>
+                            <input 
+                                type="number" 
+                                id="creditAmount" 
+                                class="form-input" 
+                                placeholder="1000" 
+                                min="1" 
+                                step="100"
+                                value="1000"
+                            >
+                        </div>
+                        <div class="credit-buttons">
+                            <button class="btn btn-success" onclick="takeCreditV5()">
+                                Взять кредит
+                            </button>
+                            <button class="btn btn-warning" onclick="payoffCreditV5()">
+                                Погасить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- History Section -->
+                <div class="history-section">
+                    <div class="section-header">
+                        <div class="bank-icon-small">📋</div>
+                        <span>История операций</span>
+                        <div class="history-badge">
+                            <span class="bank-icon-small">📊</span>
+                            <span class="history-count" id="historyCount">0</span>
+                        </div>
+                    </div>
+                    <div class="transfers-history" id="transfersHistory">
+                        <div class="transfer-empty">Нет операций</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Вспомогательные функции для v5
+async function executeTransferV5(event) {
+    event.preventDefault();
+    
+    const recipientSelect = document.getElementById('recipientSelect');
+    const amountInput = document.getElementById('transferAmount');
+    
+    const recipientIndex = parseInt(recipientSelect.value);
+    const amount = parseFloat(amountInput.value);
+    
+    if (!recipientIndex || !amount) {
+        alert('Пожалуйста, выберите получателя и укажите сумму');
+        return;
+    }
+    
+    try {
+        const success = await transferMoneyV5(recipientIndex, amount);
+        if (success) {
+            // Очищаем только сумму, оставляем получателя
+            amountInput.value = '';
+            alert('Перевод выполнен успешно!');
+        }
+    } catch (error) {
+        alert(`Ошибка перевода: ${error.message}`);
+    }
+}
+
+async function takeCreditV5() {
+    const amountInput = document.getElementById('creditAmount');
+    const amount = parseFloat(amountInput.value);
+    
+    if (!amount || amount <= 0) {
+        alert('Пожалуйста, укажите корректную сумму кредита');
+        return;
+    }
+    
+    try {
+        const success = await requestCreditV5(amount);
+        if (success) {
+            alert('Кредит получен успешно!');
+        }
+    } catch (error) {
+        alert(`Ошибка получения кредита: ${error.message}`);
+    }
+}
+
+async function payoffCreditV5() {
+    try {
+        const success = await payoffCreditV5();
+        if (success) {
+            alert('Кредит погашен успешно!');
+        }
+    } catch (error) {
+        alert(`Ошибка погашения кредита: ${error.message}`);
+    }
+}
+
+// Улучшенное открытие модального окна с анимацией
+function openBankV5WithAnimation() {
+    const modal = document.getElementById('bankModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Принудительно перерисовываем для анимации
+        modal.offsetHeight;
+        modal.classList.add('show');
+    }
+}
+
+// Улучшенное закрытие модального окна с анимацией
+function closeBankV5WithAnimation() {
+    const modal = document.getElementById('bankModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Переопределяем глобальные функции для использования анимированных версий
+window.openBankV5 = openBankV5WithAnimation;
+window.closeBankV5 = closeBankV5WithAnimation;
+
+// Функции для разворачивания/сворачивания секций
+function toggleIncomeDetails() {
+    const details = document.getElementById('incomeDetails');
+    const icon = document.getElementById('incomeExpandIcon');
+    const item = document.querySelector('.financial-item.expandable');
+    
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+        icon.textContent = '▼';
+        item.classList.add('expanded');
+    } else {
+        details.style.display = 'none';
+        icon.textContent = '▶';
+        item.classList.remove('expanded');
+    }
+}
+
+function toggleExpensesDetails() {
+    const details = document.getElementById('expensesDetails');
+    const icon = document.getElementById('expensesExpandIcon');
+    const items = document.querySelectorAll('.financial-item.expandable');
+    const item = items[1]; // Вторая expandable секция (расходы)
+    
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+        icon.textContent = '▼';
+        item.classList.add('expanded');
+    } else {
+        details.style.display = 'none';
+        icon.textContent = '▶';
+        item.classList.remove('expanded');
+    }
+}
+</script>

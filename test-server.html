@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест сервера</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a202c;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .status {
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success { background: #38a169; }
+        .error { background: #e53e3e; }
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover { background: #3182ce; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест сервера Railway</h1>
+    
+    <div class="status" id="serverStatus">
+        <h3>Проверка сервера...</h3>
+        <p id="statusText">Тестируем подключение...</p>
+    </div>
+    
+    <div class="status" id="gameStatus">
+        <h3>Проверка игрового поля...</h3>
+        <p id="gameText">Проверяем доступность игрового поля...</p>
+    </div>
+    
+    <button onclick="testServer()">🔄 Тестировать сервер</button>
+    <button onclick="testGame()">🎮 Тестировать игру</button>
+    <button onclick="window.location.href='/'">🏠 Перейти к игре</button>
+    
+    <script>
+        async function testServer() {
+            const statusDiv = document.getElementById('serverStatus');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                statusText.textContent = 'Отправляем запрос...';
+                
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'ok') {
+                    statusDiv.className = 'status success';
+                    statusText.textContent = `✅ Сервер работает! Время: ${new Date(data.timestamp).toLocaleTimeString()}`;
+                } else {
+                    throw new Error('Неверный ответ сервера');
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusText.textContent = `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        async function testGame() {
+            const statusDiv = document.getElementById('gameStatus');
+            const gameText = document.getElementById('gameText');
+            
+            try {
+                gameText.textContent = 'Проверяем игровое поле...';
+                
+                const response = await fetch('/');
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    if (html.includes('gameBoard') && html.includes('Энергия денег')) {
+                        statusDiv.className = 'status success';
+                        gameText.textContent = '✅ Игровое поле доступно! Все компоненты найдены.';
+                    } else {
+                        throw new Error('Игровое поле не найдено в HTML');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                gameText.textContent = `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        // Автоматический тест при загрузке
+        window.addEventListener('load', () => {
+            testServer();
+            setTimeout(testGame, 1000);
+        });
+    </script>
+</body>
+</html>

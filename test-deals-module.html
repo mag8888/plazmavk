@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест микромодуля карточек</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            background: #2d2d2d;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid #444;
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #45a049;
+        }
+        .test-button.danger {
+            background: #f44336;
+        }
+        .test-button.danger:hover {
+            background: #da190b;
+        }
+        .test-results {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .deck-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .deck-card {
+            background: #444;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #666;
+        }
+        .deck-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+        .deck-stats {
+            font-size: 14px;
+            color: #ccc;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+        .modal-content {
+            background-color: #2d2d2d;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #666;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест микромодуля карточек</h1>
+    
+    <div class="test-section">
+        <h2>🎴 Инициализация модуля</h2>
+        <button class="test-button" onclick="initModule()">Инициализировать DealsModule</button>
+        <button class="test-button" onclick="checkModuleStatus()">Проверить статус</button>
+        <div id="moduleStatus" class="test-results" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Информация о колодах</h2>
+        <button class="test-button" onclick="showDeckInfo()">Показать информацию о колодах</button>
+        <div id="deckInfo" class="deck-info" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎯 Тест функций</h2>
+        <button class="test-button" onclick="testDealChoice()">Тест выбора сделки</button>
+        <button class="test-button" onclick="testDrawCard('bigDeal')">Взять большую сделку</button>
+        <button class="test-button" onclick="testDrawCard('smallDeal')">Взять малую сделку</button>
+        <button class="test-button" onclick="testDrawCard('market')">Взять карту рынка</button>
+        <button class="test-button" onclick="testDrawCard('expenses')">Взять карту расходов</button>
+        <button class="test-button" onclick="testAssetsCatalog()">Тест каталога активов</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔄 Тест системы отбоя</h2>
+        <button class="test-button" onclick="testDiscardSystem()">Тест системы отбоя</button>
+        <button class="test-button" onclick="testReshuffle()">Тест перемешивания из отбоя</button>
+        <div id="discardTest" class="test-results" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>👥 Тест передачи карт</h2>
+        <button class="test-button" onclick="testCardTransfer()">Тест передачи карт</button>
+        <div id="transferTest" class="test-results" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎲 Тест событий клеток</h2>
+        <button class="test-button" onclick="testCellEvents()">Тест событий клеток</button>
+        <div id="cellEventTest" class="test-results" style="display: none;"></div>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Подключаем модуль -->
+    <script src="/game-board/config/full-cards-config.js"></script>
+    <script src="/assets/js/modules/game/DealsModule.js"></script>
+    
+    <script>
+        let dealsModule = null;
+        
+        function initModule() {
+            try {
+                if (typeof DealsModule !== 'undefined') {
+                    dealsModule = new DealsModule();
+                    showResult('moduleStatus', '✅ DealsModule успешно инициализирован!', 'success');
+                } else {
+                    showResult('moduleStatus', '❌ DealsModule не найден!', 'error');
+                }
+            } catch (error) {
+                showResult('moduleStatus', `❌ Ошибка инициализации: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkModuleStatus() {
+            const status = {
+                module: dealsModule ? '✅ Инициализирован' : '❌ Не инициализирован',
+                decks: dealsModule ? {
+                    bigDeal: dealsModule.decks.bigDeal.length,
+                    smallDeal: dealsModule.decks.smallDeal.length,
+                    market: dealsModule.decks.market.length,
+                    expenses: dealsModule.decks.expenses.length
+                } : 'N/A',
+                discardPiles: dealsModule ? {
+                    bigDeal: dealsModule.discardPiles.bigDeal.length,
+                    smallDeal: dealsModule.discardPiles.smallDeal.length,
+                    market: dealsModule.discardPiles.market.length,
+                    expenses: dealsModule.discardPiles.expenses.length
+                } : 'N/A'
+            };
+            
+            showResult('moduleStatus', `<pre>${JSON.stringify(status, null, 2)}</pre>`, 'info');
+        }
+        
+        function showDeckInfo() {
+            if (!dealsModule) {
+                showResult('deckInfo', '❌ Модуль не инициализирован!', 'error');
+                return;
+            }
+            
+            const deckInfo = document.getElementById('deckInfo');
+            deckInfo.innerHTML = '';
+            deckInfo.style.display = 'block';
+            
+            Object.entries(dealsModule.decks).forEach(([deckType, cards]) => {
+                const discardCount = dealsModule.discardPiles[deckType].length;
+                const deckCard = document.createElement('div');
+                deckCard.className = 'deck-card';
+                deckCard.innerHTML = `
+                    <div class="deck-title">${getDeckTitle(deckType)}</div>
+                    <div class="deck-stats">
+                        <div>Карт в колоде: ${cards.length}</div>
+                        <div>Карт в отбое: ${discardCount}</div>
+                        <div>Всего карт: ${cards.length + discardCount}</div>
+                    </div>
+                `;
+                deckInfo.appendChild(deckCard);
+            });
+        }
+        
+        function getDeckTitle(deckType) {
+            const titles = {
+                bigDeal: '💼 Большие сделки',
+                smallDeal: '📦 Малые сделки',
+                market: '🛒 Рынок',
+                expenses: '💳 Расходы'
+            };
+            return titles[deckType] || deckType;
+        }
+        
+        function testDealChoice() {
+            if (!dealsModule) {
+                alert('❌ Модуль не инициализирован!');
+                return;
+            }
+            
+            dealsModule.showDealChoice('testPlayer');
+            showResult('cellEventTest', '✅ Модальное окно выбора сделки показано', 'success');
+        }
+        
+        function testDrawCard(deckType) {
+            if (!dealsModule) {
+                alert('❌ Модуль не инициализирован!');
+                return;
+            }
+            
+            try {
+                dealsModule.drawCard(deckType, 'testPlayer');
+                showResult('cellEventTest', `✅ Карта взята из колоды ${deckType}`, 'success');
+            } catch (error) {
+                showResult('cellEventTest', `❌ Ошибка взятия карты: ${error.message}`, 'error');
+            }
+        }
+        
+        function testAssetsCatalog() {
+            if (!dealsModule) {
+                alert('❌ Модуль не инициализирован!');
+                return;
+            }
+            
+            dealsModule.showAssetsCatalog();
+            showResult('cellEventTest', '✅ Каталог активов показан', 'success');
+        }
+        
+        function testDiscardSystem() {
+            if (!dealsModule) {
+                alert('❌ Модуль не инициализирован!');
+                return;
+            }
+            
+            // Берем карту и отправляем в отбой
+            const originalDeckLength = dealsModule.decks.smallDeal.length;
+            const originalDiscardLength = dealsModule.discardPiles.smallDeal.length;
+            
+            if (originalDeckLength > 0) {
+                const card = dealsModule.decks.smallDeal[0];
+                dealsModule.passCard(card, 'smallDeal');
+                
+                const newDeckLength = dealsModule.decks.smallDeal.length;
+                const newDiscardLength = dealsModule.discardPiles.smallDeal.length;
+                
+                const result = `
+                    ✅ Тест системы отбоя:
+                    <br>• Исходная колода: ${originalDeckLength} карт
+                    <br>• Исходный отбой: ${originalDiscardLength} карт
+                    <br>• Новая колода: ${newDeckLength} карт
+                    <br>• Новый отбой: ${newDiscardLength} карт
+                    <br>• Карта отправлена в отбой: ${originalDeckLength > newDeckLength ? '✅' : '❌'}
+                `;
+                showResult('discardTest', result, 'success');
+            } else {
+                showResult('discardTest', '❌ Колода пуста, нельзя протестировать отбой', 'error');
+            }
+        }
+        
+        function testReshuffle() {
+            if (!dealsModule) {
+                alert('❌ Модуль не инициализирован!');
+                return;
+            }
+            
+            // Очищаем колоду и добавляем карты в отбой
+            const cards = [...dealsModule.decks.smallDeal];
+            dealsModule.decks.smallDeal = [];
+            dealsModule.discardPiles.smallDeal = [...cards];
+            
+            // Тестируем перемешивание
+            dealsModule.reshuffleDeck('smallDeal');
+            
+            const result = `
+                ✅ Тест перемешивания из отбоя:
+                <br>• Карт в колоде после перемешивания: ${dealsModule.decks.smallDeal.length}
+                <br>• Карт в отбое после перемешивания: ${dealsModule.discardPiles.smallDeal.length}
+                <br>• Перемешивание выполнено: ${dealsModule.decks.smallDeal.length > 0 ? '✅' : '❌'}
+            `;
+            showResult('discardTest', result, 'success');
+        }
+        
+        function testCardTransfer() {
+            if (!dealsModule) {
+                alert('❌ Модуль не инициализирован!');
+                return;
+            }
+            
+            // Создаем тестовую карту
+            const testCard = {
+                name: 'Тестовая карта',
+                description: 'Карта для тестирования передачи',
+                cost: 1000,
+                type: 'smallDeal'
+            };
+            
+            // Добавляем карту игроку
+            if (!dealsModule.playerAssets.has('player1')) {
+                dealsModule.playerAssets.set('player1', []);
+            }
+            dealsModule.playerAssets.get('player1').push(testCard);
+            
+            const result = `
+                ✅ Тест передачи карт:
+                <br>• Карта добавлена игроку player1: ✅
+                <br>• Карт у player1: ${dealsModule.playerAssets.get('player1').length}
+                <br>• Функция передачи доступна: ${typeof dealsModule.transferCard === 'function' ? '✅' : '❌'}
+            `;
+            showResult('transferTest', result, 'success');
+        }
+        
+        function testCellEvents() {
+            if (!dealsModule) {
+                alert('❌ Модуль не инициализирован!');
+                return;
+            }
+            
+            // Тестируем события
+            const events = [
+                { type: 'cellDealActivated', detail: { playerId: 'testPlayer' } },
+                { type: 'dealOfferReceived', detail: { playerId: 'testPlayer' } },
+                { type: 'cellEvent', detail: { cellType: 'green_opportunity', playerId: 'testPlayer' } }
+            ];
+            
+            let results = '✅ Тест событий клеток:<br>';
+            
+            events.forEach((event, index) => {
+                try {
+                    document.dispatchEvent(new CustomEvent(event.type, { detail: event.detail }));
+                    results += `• Событие ${event.type}: ✅<br>`;
+                } catch (error) {
+                    results += `• Событие ${event.type}: ❌ ${error.message}<br>`;
+                }
+            });
+            
+            showResult('cellEventTest', results, 'success');
+        }
+        
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.style.display = 'block';
+            element.style.borderLeftColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3';
+        }
+        
+        function closeModal() {
+            document.getElementById('testModal').style.display = 'none';
+        }
+        
+        // Автоматическая инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Тестовая страница загружена');
+            setTimeout(initModule, 1000);
+        });
+    </script>
+</body>
+</html>

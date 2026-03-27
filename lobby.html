@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Лобби - Энергия денег</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <style>
+        /* Using system fonts to avoid connection issues */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0c1445 100%);
+            color: white;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .header-info h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .header-info p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .user-balance {
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .lobby-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            height: calc(100vh - 140px);
+        }
+
+        .rooms-section {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .rooms-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .room-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .room-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #10b981;
+        }
+
+        .room-card.user-in-room {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .user-in-room-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .player-avatar.current-user {
+            border: 2px solid #10b981;
+            background: #10b981;
+        }
+
+        .join-btn.in-room {
+            background: #10b981;
+            color: white;
+        }
+
+        .join-btn.in-room:hover {
+            background: #059669;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .room-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .room-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-waiting {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .status-full {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-playing {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .room-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .room-expiry {
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 4px;
+            font-size: 12px;
+            color: #ffc107;
+            text-align: center;
+        }
+
+        .room-players {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .player-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .empty-slot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .join-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .join-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .join-btn:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .controls-section {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .create-room-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .create-room-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .quick-join-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-join-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .stats-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .stats-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+        }
+
+        .stat-value {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #10b981;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.3);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .profession-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .profession-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profession-card:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+
+        .profession-card.selected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .profession-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .profession-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .profession-description {
+            font-size: 10px;
+            color: #94a3b8;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .profession-details {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 10px;
+        }
+
+        .detail-label {
+            color: #94a3b8;
+        }
+
+        .detail-value {
+            font-weight: 600;
+        }
+
+        .detail-value.income {
+            color: #10b981;
+        }
+
+        .detail-value.expense {
+            color: #f59e0b;
+        }
+
+        .detail-value.cashflow {
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .lobby-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .controls-section {
+                order: -1;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">🎲</div>
+                <div class="header-info">
+                    <h1>Энергия денег</h1>
+                    <p>Лобби игры</p>
+                </div>
+            </div>
+            <div class="user-section">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Игрок</div>
+                    <div class="user-balance" id="userBalance">$3,000</div>
+                </div>
+                <button class="logout-btn" type="button">Выйти</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="lobby-content">
+            <!-- Rooms Section -->
+            <div class="rooms-section">
+                <div class="section-header">
+                    <h2 class="section-title">Доступные комнаты</h2>
+                    <button class="refresh-btn" type="button">🔄 Обновить</button>
+                </div>
+                <div class="rooms-list" id="roomsList">
+                    <!-- Rooms will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <button class="create-room-btn" type="button">
+                    ➕ Создать комнату
+                </button>
+                <button class="quick-join-btn" type="button">
+                    ⚡ Быстрое присоединение
+                </button>
+                
+                <div class="stats-section">
+                    <div class="stats-title">Статистика</div>
+                    <div class="stat-item">
+                        <span class="stat-label">Всего игр:</span>
+                        <span class="stat-value" id="totalGames">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Побед:</span>
+                        <span class="stat-value" id="totalWins">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Уровень:</span>
+                        <span class="stat-value" id="userLevel">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Онлайн игроков:</span>
+                        <span class="stat-value" id="onlinePlayers">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Room Modal -->
+    <div class="modal" id="createRoomModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Создать комнату</h3>
+                <button class="close-btn" type="button">&times;</button>
+            </div>
+            
+            <div class="error-message" id="createRoomError"></div>
+            
+            <form id="createRoomForm">
+                <div class="form-group">
+                    <label class="form-label">Название комнаты</label>
+                    <input type="text" class="form-input" id="roomName" placeholder="Введите название комнаты" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Профессия</label>
+                    <div class="profession-cards">
+                        <div class="profession-card selected" data-profession="entrepreneur">
+                            <div class="profession-icon">🚀</div>
+                            <div class="profession-name">Предприниматель</div>
+                            <div class="profession-description">Владелец бизнеса</div>
+                            <div class="profession-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Зарплата:</span>
+                                    <span class="detail-value income">$10,000</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Расходы:</span>
+                                    <span class="detail-value expense">$6,200</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Денежный поток:</span>
+                                    <span class="detail-value cashflow">$3,800</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Максимальное количество игроков</label>
+                    <select class="form-select" id="maxPlayers" required>
+                        <option value="2">2 игрока</option>
+                        <option value="3">3 игрока</option>
+                        <option value="4" selected>4 игрока</option>
+                        <option value="5">5 игроков</option>
+                        <option value="6">6 игроков</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Время на ход (минуты)</label>
+                    <select class="form-select" id="turnTime" required>
+                        <option value="1">1 минута</option>
+                        <option value="2" selected>2 минуты</option>
+                        <option value="3">3 минуты</option>
+                        <option value="4">4 минуты</option>
+                        <option value="5">5 минут</option>
+                    </select>
+                </div>
+                
+                <div class="form-checkbox">
+                    <input type="checkbox" class="checkbox" id="assignProfessions" checked>
+                    <label class="checkbox-label" for="assignProfessions">
+                        Назначить профессии всем игрокам
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Пароль комнаты (необязательно)</label>
+                    <input type="password" class="form-input" id="roomPassword" placeholder="Введите пароль для закрытой комнаты">
+                </div>
+                
+                <div class="loading" id="createRoomLoading">
+                    <div class="spinner"></div>
+                    <div>Создание комнаты...</div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать комнату</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Join Room Modal -->
+    <div class="modal" id="joinRoomModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Присоединиться к комнате</h3>
+                <button class="close-btn" type="button">&times;</button>
+            </div>
+            
+            <div class="error-message" id="joinRoomError"></div>
+            
+            <div id="joinRoomContent">
+                <div class="form-group">
+                    <label class="form-label">Введите пароль комнаты (если требуется)</label>
+                    <input type="password" class="form-input" id="joinRoomPassword" placeholder="Пароль комнаты">
+                </div>
+                
+                <div class="loading" id="joinRoomLoading">
+                    <div class="spinner"></div>
+                    <div>Присоединение к комнате...</div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary">Отмена</button>
+                    <button type="button" class="btn btn-primary">Присоединиться</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Глобальная обработка ошибок для расширений браузера -->
+    <script>
+        // Обработка ошибок от расширений браузера
+        window.addEventListener('error', function(event) {
+            if (event.filename && event.filename.includes('content.js')) {
+                console.warn('⚠️ Ошибка расширения браузера (игнорируется):', event.message);
+                event.preventDefault();
+                return false;
+            }
+        });
+        
+        // Обработка необработанных промисов
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.message && event.reason.message.includes('message port closed')) {
+                console.warn('⚠️ Ошибка расширения браузера (игнорируется):', event.reason.message);
+                event.preventDefault();
+                return false;
+            }
+        });
+    </script>
+    
+    <script src="assets/js/modules/api/RoomApi.js?v=4&t=1739999999"></script>
+    <script src="assets/js/modules/lobby/LobbyModule.js?v=4&t=1739999999"></script>
+    <script src="assets/js/modules/lobby/index.js?v=4&t=1739999999"></script>
+    
+    <!-- Отладочная панель -->
+    <script src="/assets/js/debug/DebugPanel.js"></script>
+
+</body>
+</html>

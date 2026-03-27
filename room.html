@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комната - Энергия денег</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- Removed broken ICO fallback to avoid 404; SVG is used as primary favicon -->
+    <style>
+        /* Using system fonts to avoid connection issues */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0c1445 100%);
+            color: white;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            padding: 20px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-info h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .room-info p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .room-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(280px, 1fr));
+            gap: 24px;
+            align-items: start;
+        }
+
+        .panel {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .actions-panel {
+            gap: 24px;
+        }
+
+        .waiting-message {
+            text-align: center;
+            padding: 10px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .waiting-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .waiting-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .waiting-text {
+            font-size: 16px;
+            color: #94a3b8;
+        }
+
+        .ready-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ready-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .ready-btn.ready {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .ready-btn.disabled {
+            background: rgba(107, 114, 128, 0.3);
+            color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .start-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .update-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .update-indicator.updating {
+            color: #3b82f6;
+        }
+
+        .update-indicator.ready {
+            color: #10b981;
+        }
+
+        .update-dot {
+            width: 6px;
+            height: 6px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .update-indicator.updating .update-dot {
+            background: #3b82f6;
+            animation: pulse 1s infinite;
+        }
+
+        .update-indicator.ready .update-dot {
+            background: #10b981;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .dream-select-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .dream-select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .dream-select-btn:active {
+            transform: translateY(0);
+        }
+
+        .dream-select-btn.disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .dream-select-btn.disabled:hover {
+            transform: none;
+        }
+
+        .refresh-btn {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .refresh-btn:hover {
+            background: #3b82f6;
+            color: white;
+            transform: rotate(180deg);
+        }
+
+        .players-panel {
+            gap: 16px;
+            max-height: 100%;
+        }
+
+        .players-panel .panel-title {
+            margin-bottom: 0;
+        }
+
+        .players-panel .players-list {
+            flex: 1;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .selection-panel > .panel-title {
+            margin-bottom: 0;
+        }
+
+        .selection-card .panel-title {
+            margin-bottom: 8px;
+        }
+
+        .players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        /* Player slots visualization */
+        .player-slots {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Адаптивные слоты в зависимости от количества */
+        .player-slots[data-max-players="2"] {
+            max-width: 120px;
+        }
+
+        .player-slots[data-max-players="4"] {
+            max-width: 200px;
+        }
+
+        .player-slots[data-max-players="6"] {
+            max-width: 300px;
+        }
+
+        .player-slots[data-max-players="8"] {
+            max-width: 400px;
+        }
+
+        .player-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .player-slot.occupied {
+            border: 2px solid #10b981;
+            background: rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .player-slot.ready {
+            border: 2px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .player-slot .player-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .player-slot .empty-slot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .player-slot .empty-slot::before {
+            content: '👤';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        .player-slot .status-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #1e293b;
+        }
+
+        .player-slot.ready .status-indicator {
+            background: #3b82f6;
+        }
+
+        .player-slot.occupied .status-indicator {
+            background: #10b981;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+            min-height: 70px;
+        }
+
+        .player-item:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .player-item.current-user {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .player-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0; /* Позволяет flex-элементу сжиматься */
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .player-profession {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .player-dream {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #e2e8f0;
+        }
+
+        .player-token {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #fbbf24;
+        }
+
+        .player-dream .dream-icon {
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .dream-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 140px;
+        }
+
+        .player-dream .dream-name {
+            color: #3b82f6;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 120px;
+        }
+
+        .player-status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .status-ready {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-waiting {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .status-your-turn {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .status-waiting-turn {
+            background: rgba(107, 114, 128, 0.2);
+            color: #6b7280;
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+
+        .selection-panel {
+            gap: 24px;
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .selection-card,
+        .dream-selection,
+        .token-selection {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .selection-description {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+
+        .selection-toolbar {
+            margin-bottom: 12px;
+        }
+
+        .selection-search {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.7);
+            color: white;
+            font-size: 14px;
+            transition: border 0.2s ease;
+        }
+
+        .selection-search:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .dream-list,
+        .token-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            max-height: 290px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .dream-item,
+        .token-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            min-height: 84px;
+        }
+
+        .token-item {
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dream-item:hover,
+        .token-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .dream-item.selected,
+        .token-item.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+        }
+
+        .dream-item.selected::after,
+        .token-item.selected::after {
+            content: 'Выбрано';
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: rgba(16, 185, 129, 0.25);
+            color: #10b981;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .token-item.taken {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .token-item.taken::after {
+            content: 'Занято';
+            background: rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+        }
+
+        .token-item.taken {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .token-item.taken::after {
+            content: 'Занято';
+            background: rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+        }
+
+        .dream-name,
+        .token-name {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .dream-cost {
+            font-size: 12px;
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .dream-icon,
+        .token-icon {
+            font-size: 20px;
+        }
+
+        .room-settings {
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            padding-top: 16px;
+            margin-top: 8px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .setting-label {
+            color: #94a3b8;
+        }
+
+        .setting-value {
+            color: white;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        @media (max-width: 1280px) {
+            .room-content {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .players-panel {
+                order: 3;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .room-content {
+                grid-template-columns: 1fr;
+            }
+
+            .selection-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .players-list,
+            .dream-list,
+            .token-list {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="room-info">
+                <h1 id="roomName">Загрузка...</h1>
+                <p id="roomStatus">Подключение к комнате...</p>
+                <div class="update-indicator ready" id="updateIndicator">
+                    <span class="update-dot"></span>
+                    <span class="update-label">Готово</span>
+                </div>
+            </div>
+            <div class="header-buttons">
+                <button class="dream-select-btn" id="dreamSelectBtn" style="display: none;">🎯 Выберите мечту</button>
+                <button class="refresh-btn" title="Обновить данные">🔄</button>
+                <button class="back-btn">← Назад в лобби</button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Загрузка комнаты...</div>
+        </div>
+
+        <!-- Room Content -->
+        <div class="room-content" id="roomContent" style="display: none;">
+            <section class="panel actions-panel">
+                <div class="waiting-message">
+                    <div class="waiting-icon">🎲</div>
+                    <div class="waiting-title" id="waitingTitle">Ожидание игроков</div>
+                    <div class="waiting-text" id="waitingText">
+                        Игра начнется, когда все игроки будут готовы
+                    </div>
+                    <div class="button-group">
+                        <button class="start-btn" id="startBtn" style="display: none;">🚀 Старт</button>
+                        <button class="ready-btn" id="readyBtn">Готов</button>
+                    </div>
+                </div>
+
+                <div class="room-settings">
+                    <div class="panel-title">Настройки комнаты</div>
+                    <div class="setting-item">
+                        <span class="setting-label">Время на ход:</span>
+                        <span class="setting-value" id="turnTime">2 мин</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Профессии:</span>
+                        <span class="setting-value" id="professionMode">Свободный выбор</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Создатель:</span>
+                        <span class="setting-value" id="creatorName">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel selection-panel">
+                <div class="panel-title">Подготовьте персонажа</div>
+                <div class="selection-grid">
+                    <div class="selection-card dream-selection">
+                        <div class="panel-title">Выберите мечту</div>
+                        <div class="selection-description">Выберите цель, к которой вы будете идти во время игры.</div>
+                        <div class="selection-toolbar">
+                            <input type="search" id="dreamSearch" class="selection-search" placeholder="Поиск мечты...">
+                        </div>
+                        <div class="dream-list" id="dreamList"></div>
+                    </div>
+
+                    <div class="selection-card token-selection">
+                        <div class="panel-title">Выберите фишку</div>
+                        <div class="selection-description">Выберите фишку, которая будет представлять вас на поле.</div>
+                        <div class="selection-toolbar">
+                            <input type="search" id="tokenSearch" class="selection-search" placeholder="Поиск фишки...">
+                        </div>
+                        <div class="token-list" id="tokenList"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel players-panel">
+                <div class="panel-title">Игроки (<span id="playersCount">0</span>/<span id="maxPlayers">0</span>)</div>
+                <div class="player-slots" id="playerSlots" data-max-players="4">
+                    <!-- Player slots will be rendered here -->
+                </div>
+                <div class="players-list" id="playersList">
+                    <!-- Players will be loaded here -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Глобальная обработка ошибок для расширений браузера -->
+    <script>
+        // Обработка ошибок от расширений браузера
+        window.addEventListener('error', function(event) {
+            if (event.filename && event.filename.includes('content.js')) {
+                console.warn('⚠️ Ошибка расширения браузера (игнорируется):', event.message);
+                event.preventDefault();
+                return false;
+            }
+        });
+        
+        // Обработка необработанных промисов
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.message && event.reason.message.includes('message port closed')) {
+                console.warn('⚠️ Ошибка расширения браузера (игнорируется):', event.reason.message);
+                event.preventDefault();
+                return false;
+            }
+        });
+    </script>
+    
+    <script src="/assets/js/modules/shared/EventEmitter.js"></script>
+    <script src="/assets/js/modules/api/RoomApi.js"></script>
+    <script src="/assets/js/modules/room/ErrorDisplay.js"></script>
+    <script src="/assets/js/modules/room/PlayersList.js"></script>
+    <script src="/assets/js/modules/room/DreamSelector.js"></script>
+    <script src="/assets/js/modules/room/DreamSelectButton.js"></script>
+    <script src="/assets/js/modules/room/TokenSelector.js"></script>
+    <script src="/assets/js/modules/room/ReadyButton.js"></script>
+    <script src="/assets/js/modules/room/StartButton.js"></script>
+    <script src="/assets/js/modules/room/StatusPanel.js"></script>
+    <script src="/assets/js/modules/room/UpdateIndicator.js"></script>
+    <script src="/assets/js/modules/room/RoomState.js"></script>
+    <script src="/assets/js/modules/room/RoomModule.js"></script>
+    <script type="module" src="/assets/js/modules/room/index.js"></script>
+    
+    <!-- Отладочная панель -->
+    <script src="/assets/js/debug/DebugPanel.js"></script>
+
+</body>
+</html>

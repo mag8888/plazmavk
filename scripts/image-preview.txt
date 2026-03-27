@@ -1,0 +1,16 @@
+            
+            // Display current image preview
+            const imagePreview = document.getElementById('currentImagePreview');
+            if (imagePreview && imageUrl) {
+              imagePreview.innerHTML = `
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Текущее изображение</label>
+                <div style="border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px; background: #f9fafb;">
+                  <img src="${imageUrl}" alt="${title}" style="max-width: 100%; max-height: 300px; border-radius: 8px; display: block; margin: 0 auto;">
+                </div>
+              `;
+            } else if (imagePreview) {
+              imagePreview.innerHTML = '<p style="color: #6b7280; font-size: 14px;">Текущее изображение отсутствует</p>';
+            }
+
+            // Add price conversion
+            if (priceInput && priceRubInput) {

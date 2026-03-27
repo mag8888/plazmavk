@@ -1,0 +1,186 @@
+# 🚂 Настройка Railway для Web App
+
+## 🗄️ Настройка базы данных MongoDB на Railway
+
+### Вариант 1: MongoDB на Railway (Рекомендуется)
+
+1. **Добавьте MongoDB плагин:**
+   - В Railway Dashboard нажмите **"+ New"** → **"Database"** → **"Add MongoDB"**
+   - Railway автоматически создаст MongoDB инстанс
+
+2. **Настройте подключение:**
+   - Railway автоматически создаст переменную `MONGO_URL` в MongoDB сервисе
+   - В основном сервисе (бот) добавьте переменную `DATABASE_URL` со значением: `${{MongoDB.MONGO_URL}}`
+   - Это создаст Reference Variable, которая автоматически синхронизируется
+
+**Подробная инструкция:** См. [RAILWAY_MONGODB_SETUP.md](./RAILWAY_MONGODB_SETUP.md)
+
+### Вариант 2: MongoDB Atlas (внешний)
+
+Если вы используете MongoDB Atlas, просто добавьте переменную `DATABASE_URL` с вашей строкой подключения.
+
+## Переменные окружения
+
+Добавьте следующие переменные в Railway Dashboard:
+
+### 1. Откройте Railway Dashboard
+- Перейдите в ваш проект `plazma-production`
+- Откройте раздел "Settings" → "Variables"
+
+### 2. Добавьте переменные
+
+```env
+BOT_TOKEN=your_bot_token_from_botfather
+DATABASE_URL=${{MongoDB.MONGO_URL}}  # Для Railway MongoDB (Reference Variable)
+# ИЛИ
+DATABASE_URL=your_mongodb_atlas_connection_string  # Для MongoDB Atlas
+SESSION_SECRET=your_random_session_secret_key
+PUBLIC_BASE_URL=https://plazma-production.up.railway.app
+WEBAPP_URL=https://plazma-production.up.railway.app/webapp
+```
+
+**Примечание:** Приложение автоматически использует `DATABASE_URL` или `MONGO_URL` (если `DATABASE_URL` не установлен).
+
+### 3. Автоматические переменные Railway
+
+Railway автоматически предоставляет:
+- `RAILWAY_STATIC_URL` - URL вашего приложения
+- `PORT` - порт для приложения (обычно 3000)
+- `RAILWAY_ENVIRONMENT` - окружение (production)
+
+## Развертывание
+
+### 1. Автоматическое развертывание
+Railway автоматически развернет приложение при пуше в main ветку:
+
+```bash
+git push origin main
+```
+
+### 2. Проверка развертывания
+1. Откройте Railway Dashboard
+2. Перейдите в раздел "Deployments"
+3. Дождитесь завершения деплоя (зеленый статус)
+
+### 3. Проверка логов
+В разделе "Deployments" → "View Logs" проверьте:
+- ✅ Database connected
+- ✅ Initial data ensured  
+- ✅ Server is running on port 3000
+- ✅ Bot launched successfully
+
+## Настройка Web App
+
+### 1. После успешного развертывания
+```bash
+# Локально (с BOT_TOKEN в .env)
+npm run setup-railway
+```
+
+### 2. Или через Railway CLI
+```bash
+# Установите Railway CLI
+npm install -g @railway/cli
+
+# Войдите в аккаунт
+railway login
+
+# Подключитесь к проекту
+railway link
+
+# Запустите настройку
+railway run npm run setup-railway
+```
+
+## Проверка работоспособности
+
+### 1. Health Check
+```
+GET https://plazma-production.up.railway.app/health
+```
+
+Ожидаемый ответ:
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### 2. Web App
+```
+GET https://plazma-production.up.railway.app/webapp
+```
+
+Должна загрузиться главная страница веб-приложения.
+
+### 3. API Health
+```
+GET https://plazma-production.up.railway.app/webapp/api/health
+```
+
+Ожидаемый ответ:
+```json
+{
+  "status": "ok", 
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+## Настройка бота
+
+### 1. Кнопка меню
+После запуска `npm run setup-railway` в боте появится кнопка "🌐 Веб-приложение"
+
+### 2. Проверка в боте
+1. Откройте бота в Telegram
+2. Проверьте наличие кнопки "🌐 Веб-приложение" в меню
+3. Нажмите на кнопку - должно открыться веб-приложение
+
+## Отладка
+
+### 1. Проблемы с развертыванием
+- Проверьте логи в Railway Dashboard
+- Убедитесь, что все переменные окружения установлены
+- Проверьте, что база данных доступна
+
+### 2. Проблемы с Web App
+- Проверьте доступность URL в браузере
+- Убедитесь, что SSL сертификат активен
+- Проверьте CORS настройки
+
+### 3. Проблемы с ботом
+- Проверьте корректность BOT_TOKEN
+- Убедитесь, что webhook настроен правильно
+- Проверьте логи бота
+
+## Мониторинг
+
+Railway предоставляет:
+- 📊 Метрики производительности
+- 📝 Логи в реальном времени
+- 🔄 Автоматические рестарты
+- 📈 Автоматическое масштабирование
+
+## Обновление
+
+Для обновления приложения:
+```bash
+git add .
+git commit -m "Update webapp"
+git push origin main
+```
+
+Railway автоматически развернет обновления.
+
+## Резервное копирование
+
+Railway автоматически создает снимки состояния приложения. Для дополнительного резервного копирования:
+- Настройте автоматическое резервное копирование базы данных
+- Экспортируйте переменные окружения
+- Сохраните конфигурацию проекта
+
+---
+
+**🎉 После настройки ваше Web App будет доступно по адресу:**
+**`https://plazma-production.up.railway.app/webapp`**

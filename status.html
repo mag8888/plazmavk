@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус сервера</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a202c;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .status-card {
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .success { border-left: 5px solid #38a169; }
+        .error { border-left: 5px solid #e53e3e; }
+        .warning { border-left: 5px solid #f59e0b; }
+        .info { border-left: 5px solid #3182ce; }
+        .timestamp {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover { background: #3182ce; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Статус сервера Railway</h1>
+    
+    <div class="status-card info">
+        <h3>Информация о деплое</h3>
+        <p>Последний коммит: <strong>ea1dfe6</strong></p>
+        <p>Время: <strong id="deployTime">Проверяется...</strong></p>
+        <p>Статус: <strong id="deployStatus">Проверяется...</strong></p>
+    </div>
+    
+    <div class="status-card" id="serverStatus">
+        <h3>Проверка сервера</h3>
+        <p id="serverText">Тестируем подключение...</p>
+    </div>
+    
+    <div class="status-card" id="gameStatus">
+        <h3>Проверка игрового поля</h3>
+        <p id="gameText">Проверяем игровое поле...</p>
+    </div>
+    
+    <div class="status-card" id="filesStatus">
+        <h3>Проверка файлов</h3>
+        <p id="filesText">Проверяем наличие файлов...</p>
+    </div>
+    
+    <button onclick="runAllTests()">🔄 Обновить проверку</button>
+    <button onclick="window.location.href='/'">🏠 Перейти к игре</button>
+    <button onclick="window.location.href='/test'">🧪 Диагностика</button>
+    
+    <script>
+        async function runAllTests() {
+            await testServer();
+            await testGame();
+            await testFiles();
+            updateDeployInfo();
+        }
+        
+        async function testServer() {
+            const statusDiv = document.getElementById('serverStatus');
+            const statusText = document.getElementById('serverText');
+            
+            try {
+                statusText.textContent = 'Отправляем запрос к /health...';
+                
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'ok') {
+                    statusDiv.className = 'status-card success';
+                    statusText.textContent = `✅ Сервер работает! Время ответа: ${new Date(data.timestamp).toLocaleTimeString()}`;
+                } else {
+                    throw new Error('Неверный ответ сервера');
+                }
+            } catch (error) {
+                statusDiv.className = 'status-card error';
+                statusText.textContent = `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        async function testGame() {
+            const statusDiv = document.getElementById('gameStatus');
+            const gameText = document.getElementById('gameText');
+            
+            try {
+                gameText.textContent = 'Проверяем главную страницу...';
+                
+                const response = await fetch('/');
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    if (html.includes('gameBoard') && html.includes('Энергия денег')) {
+                        statusDiv.className = 'status-card success';
+                        gameText.textContent = '✅ Игровое поле доступно!';
+                    } else {
+                        statusDiv.className = 'status-card warning';
+                        gameText.textContent = '⚠️ Игровое поле найдено, но может быть неполным';
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusDiv.className = 'status-card error';
+                gameText.textContent = `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        async function testFiles() {
+            const statusDiv = document.getElementById('filesStatus');
+            const filesText = document.getElementById('filesText');
+            
+            const filesToCheck = [
+                '/assets/js/core/GameCore.js',
+                '/assets/css/main.css',
+                '/config/game-config.js'
+            ];
+            
+            let foundFiles = 0;
+            
+            for (const file of filesToCheck) {
+                try {
+                    const response = await fetch(file);
+                    if (response.ok) {
+                        foundFiles++;
+                    }
+                } catch (error) {
+                    console.warn(`Файл ${file} не найден:`, error);
+                }
+            }
+            
+            if (foundFiles === filesToCheck.length) {
+                statusDiv.className = 'status-card success';
+                filesText.textContent = `✅ Все файлы найдены (${foundFiles}/${filesToCheck.length})`;
+            } else if (foundFiles > 0) {
+                statusDiv.className = 'status-card warning';
+                filesText.textContent = `⚠️ Найдено ${foundFiles} из ${filesToCheck.length} файлов`;
+            } else {
+                statusDiv.className = 'status-card error';
+                filesText.textContent = `❌ Файлы не найдены`;
+            }
+        }
+        
+        function updateDeployInfo() {
+            document.getElementById('deployTime').textContent = new Date().toLocaleTimeString();
+            
+            // Проверяем, есть ли новая версия
+            const currentCommit = 'ea1dfe6';
+            document.getElementById('deployStatus').textContent = `Коммит ${currentCommit} активен`;
+        }
+        
+        // Автоматическая проверка при загрузке
+        window.addEventListener('load', () => {
+            runAllTests();
+            
+            // Обновление каждые 30 секунд
+            setInterval(runAllTests, 30000);
+        });
+    </script>
+</body>
+</html>

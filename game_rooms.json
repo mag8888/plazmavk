@@ -1,0 +1,173 @@
+{
+  "rooms": [
+    [
+      "room_2f5528f7-c056-48f9-b888-49fc524627fd",
+      {
+        "id": "room_2f5528f7-c056-48f9-b888-49fc524627fd",
+        "name": "Тестовая комната",
+        "creatorId": "test-user",
+        "creatorName": "Тестовый пользователь",
+        "maxPlayers": 4,
+        "minPlayers": 2,
+        "gameStarted": false,
+        "createdAt": "2025-09-21T06:32:14.982Z",
+        "updatedAt": "2025-09-21T06:32:14.982Z",
+        "lastActivity": 1758436334982
+      }
+    ],
+    [
+      "room_4b2af585-dbdc-466c-9249-d9eed4e91852",
+      {
+        "id": "room_4b2af585-dbdc-466c-9249-d9eed4e91852",
+        "name": "Тестовая комната",
+        "creatorId": "test-user",
+        "creatorName": "Тестовый пользователь",
+        "maxPlayers": 4,
+        "minPlayers": 2,
+        "gameStarted": false,
+        "createdAt": "2025-09-21T06:34:13.784Z",
+        "updatedAt": "2025-09-21T06:34:13.784Z",
+        "lastActivity": 1758436453784
+      }
+    ],
+    [
+      "room_76cdaa2b-3c9e-43c3-aca7-1107c18784ea",
+      {
+        "id": "room_76cdaa2b-3c9e-43c3-aca7-1107c18784ea",
+        "name": "Тестовая комната",
+        "creatorId": "test-user",
+        "creatorName": "Тестовый пользователь",
+        "maxPlayers": 4,
+        "minPlayers": 2,
+        "gameStarted": false,
+        "createdAt": "2025-09-21T06:41:49.877Z",
+        "updatedAt": "2025-09-21T06:41:49.877Z",
+        "lastActivity": 1758436909877
+      }
+    ],
+    [
+      "room_32787992-b9bf-4445-88b4-2aa0abec0167",
+      {
+        "id": "room_32787992-b9bf-4445-88b4-2aa0abec0167",
+        "name": "Тестовая комната",
+        "creatorId": "test-user",
+        "creatorName": "Тестовый пользователь",
+        "maxPlayers": 4,
+        "minPlayers": 2,
+        "gameStarted": false,
+        "createdAt": "2025-09-21T08:09:24.392Z",
+        "updatedAt": "2025-09-21T08:09:24.392Z",
+        "lastActivity": 1758442164392
+      }
+    ]
+  ],
+  "players": [
+    [
+      "room_2f5528f7-c056-48f9-b888-49fc524627fd",
+      [
+        {
+          "userId": "test-user",
+          "name": "Тестовый пользователь",
+          "isHost": true,
+          "isReady": false,
+          "selectedDream": null,
+          "selectedToken": null,
+          "position": 0,
+          "balance": 1000,
+          "joinedAt": "2025-09-21T06:32:14.984Z"
+        }
+      ]
+    ],
+    [
+      "room_4b2af585-dbdc-466c-9249-d9eed4e91852",
+      [
+        {
+          "userId": "test-user",
+          "name": "Тестовый пользователь",
+          "isHost": true,
+          "isReady": false,
+          "selectedDream": null,
+          "selectedToken": null,
+          "position": 0,
+          "balance": 1000,
+          "joinedAt": "2025-09-21T06:34:13.786Z"
+        }
+      ]
+    ],
+    [
+      "room_76cdaa2b-3c9e-43c3-aca7-1107c18784ea",
+      [
+        {
+          "userId": "test-user",
+          "name": "Тестовый пользователь",
+          "isHost": true,
+          "isReady": false,
+          "selectedDream": null,
+          "selectedToken": null,
+          "position": 0,
+          "balance": 1000,
+          "joinedAt": "2025-09-21T06:41:49.879Z"
+        }
+      ]
+    ],
+    [
+      "room_32787992-b9bf-4445-88b4-2aa0abec0167",
+      [
+        {
+          "userId": "test-user",
+          "name": "Тестовый пользователь",
+          "isHost": true,
+          "isReady": false,
+          "selectedDream": null,
+          "selectedToken": null,
+          "position": 0,
+          "balance": 1000,
+          "joinedAt": "2025-09-21T08:09:24.393Z"
+        }
+      ]
+    ]
+  ],
+  "users": [
+    [
+      "user_1758443642693_yfqkje",
+      {
+        "id": "user_1758443642693_yfqkje",
+        "email": "test@example.com",
+        "password": "test123",
+        "first_name": "Тестовый",
+        "last_name": "Пользователь",
+        "balance": 10000,
+        "level": 1,
+        "experience": 0,
+        "games_played": 0,
+        "wins_count": 0,
+        "referrals_count": 0,
+        "referral_earnings": 0,
+        "is_active": true,
+        "created_at": "2025-09-21T08:34:02.693Z",
+        "updated_at": "2025-09-21T08:34:02.699Z"
+      }
+    ],
+    [
+      "user_1758443650302_v3ep5z",
+      {
+        "id": "user_1758443650302_v3ep5z",
+        "email": "newuser@example.com",
+        "password": "password123",
+        "first_name": "Новый",
+        "last_name": "Пользователь",
+        "balance": 10000,
+        "level": 1,
+        "experience": 0,
+        "games_played": 0,
+        "wins_count": 0,
+        "referrals_count": 0,
+        "referral_earnings": 0,
+        "is_active": true,
+        "created_at": "2025-09-21T08:34:10.302Z",
+        "updated_at": "2025-09-21T08:34:10.302Z"
+      }
+    ]
+  ],
+  "timestamp": "2025-09-21T08:34:14.557Z"
+}

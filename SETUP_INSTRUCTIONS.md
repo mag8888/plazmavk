@@ -1,0 +1,231 @@
+# 📋 Инструкции по настройке Railway MongoDB
+
+**База данных:** проект рассчитан на Railway MongoDB. В `DATABASE_URL` укажите строку подключения к Railway в формате:  
+`mongodb://USER:PASSWORD@HOST:PORT/plazma_bot?authSource=admin`
+
+## 🎯 Что нужно сделать
+
+### Шаг 1: Установите Railway CLI (если еще не установлен)
+
+```bash
+npm i -g @railway/cli
+```
+
+### Шаг 2: Подключитесь к проекту
+
+```bash
+railway link
+```
+
+Выберите проект `plazma-production` (или ваш проект).
+
+### Шаг 3: Настройте replica set на Railway MongoDB
+
+**Откройте MongoDB shell:**
+
+```bash
+railway run mongosh
+```
+
+**В MongoDB shell выполните:**
+
+```javascript
+// Инициализируйте replica set
+rs.initiate({
+  _id: "rs0",
+  members: [
+    { _id: 0, host: "localhost:27017" }
+  ]
+})
+
+// Подождите 5-10 секунд, затем проверьте статус
+rs.status()
+```
+
+**Ожидаемый результат:**
+```json
+{
+  "set": "rs0",
+  "myState": 1,
+  "members": [
+    {
+      "_id": 0,
+      "name": "localhost:27017",
+      "stateStr": "PRIMARY"
+    }
+  ]
+}
+```
+
+Если видите `"set": "rs0"` и `"stateStr": "PRIMARY"` - replica set настроен правильно!
+
+**Выйдите из MongoDB shell:**
+```bash
+exit
+```
+
+### Шаг 4: Обновите DATABASE_URL на Railway
+
+1. **Откройте Railway Dashboard:**
+   - Перейдите на https://railway.app
+   - Войдите в свой аккаунт
+   - Выберите проект `plazma-production`
+
+2. **Откройте сервис бота:**
+   - Найдите сервис **plazma** (основной сервис бота)
+   - Нажмите на него
+
+3. **Откройте Variables:**
+   - Перейдите в **"Settings"** → **"Variables"**
+   - Или нажмите на вкладку **"Variables"**
+
+4. **Найдите DATABASE_URL:**
+   - Если используете Reference Variable `${{MongoDB.MONGO_URL}}`:
+     - Нужно получить реальное значение
+     - Откройте сервис **MongoDB** → **Variables**
+     - Скопируйте значение `MONGO_URL`
+     - В сервисе **plazma** создайте новую переменную `DATABASE_URL` с этим значением
+
+5. **Добавьте параметры:**
+   - Найдите переменную `DATABASE_URL`
+   - Нажмите на нее для редактирования
+   - Убедитесь, что в конце есть:
+     - Имя базы данных: `/plazma_bot` или `/plazma`
+     - Параметры: `?authSource=admin&replicaSet=rs0`
+   
+   **Пример правильного формата:**
+   ```
+   mongodb://mongo:password@host:port/plazma_bot?authSource=admin&replicaSet=rs0
+   ```
+
+6. **Сохраните изменения**
+
+### Шаг 5: Перезапустите сервис
+
+Railway автоматически перезапустит сервис при изменении переменных.
+
+Или вручную:
+- Перейдите в **"Deployments"**
+- Найдите последний деплой
+- Нажмите **"Redeploy"** (три точки → Redeploy)
+
+### Шаг 6: Проверьте логи
+
+1. Перейдите в **"Deployments"** → выберите последний деплой
+2. Откройте **"Deploy Logs"** или **"HTTP Logs"**
+3. Проверьте, что появилось:
+
+**✅ Должно быть:**
+```
+✅ Railway MongoDB detected
+✅ Replica set parameter found in connection string
+✅ Added authSource=admin for Railway MongoDB
+Database URL configured: mongodb://mongo:...
+✅ Database connected
+✅ Database ping successful
+✅ Initial data ensured
+```
+
+**❌ НЕ должно быть:**
+- `Prisma needs to perform transactions, which requires your MongoDB server to be run as a replica set`
+- `Invalid prisma.user.update() invocation`
+- `SCRAM failure: Authentication failed`
+- `ConnectorError`
+
+### Шаг 7: Проверьте работу бота
+
+1. **Откройте бота в Telegram**
+2. **Проверьте основные функции:**
+   - Откройте магазин - должно работать
+   - Добавьте товар в корзину - должно работать
+   - Откройте отзывы - должно работать
+   - Откройте партнерку - должно работать
+
+## 🆘 Решение проблем
+
+### Проблема: "replica set not yet initialized"
+
+**Решение:**
+1. Убедитесь, что выполнили `rs.initiate()` в MongoDB shell
+2. Проверьте статус: `rs.status()`
+3. Должно показать `"set": "rs0"`
+
+### Проблема: "replica set configuration is invalid"
+
+**Решение:**
+1. Проверьте, что используете правильный host
+2. Попробуйте использовать IP или hostname из connection string Railway
+3. Проверьте, что MongoDB сервис запущен
+
+### Проблема: "replicaSet parameter missing"
+
+**Решение:**
+1. Убедитесь, что добавили `replicaSet=rs0` в `DATABASE_URL`
+2. Формат должен быть: `?authSource=admin&replicaSet=rs0`
+3. Перезапустите сервис после изменения
+
+### Проблема: Все еще ошибки "replica set"
+
+**Решение:**
+1. Проверьте, что replica set действительно инициализирован:
+   ```bash
+   railway run mongosh
+   rs.status()
+   ```
+2. Убедитесь, что `DATABASE_URL` содержит `replicaSet=rs0`
+3. Попробуйте перезапустить MongoDB сервис на Railway
+
+### Проблема: Replica set сбрасывается после перезапуска
+
+**Решение:**
+1. Railway может сбрасывать конфигурацию при перезапуске MongoDB
+2. Настройте replica set через скрипт при каждом запуске при необходимости
+
+## 📚 Дополнительные ресурсы
+
+- **`CHECKLIST_REF_CATALOG_AUDIO.md`** — что нужно, чтобы работали реф-ссылки, каталог и аудио-подарок (чеклист после рефакторинга)
+- `QUICK_RAILWAY_MONGODB_SETUP.md` — краткая шпаргалка
+- `RAILWAY_MONGODB_WITHOUT_ATLAS.md` — использование Railway MongoDB
+
+## 📦 Каталог пуст / Восстановление базы
+
+**Если в мини-приложении «Каталог пока пуст»:**
+
+1. **Проверьте DATABASE_URL на Railway:** в проекте Railway → сервис plazma → Variables должен быть задан `DATABASE_URL` на вашу MongoDB с данными (формат: `mongodb://...@host:port/plazma_bot?authSource=admin`). Если приложение использует другую (пустую) БД — каталог будет пустым.
+2. **Перенесите данные** из базы, где уже есть категории и товары:
+   ```bash
+   SOURCE_MONGO_URL="mongodb://user:pass@host:port/plazma_bot?authSource=admin" node scripts/sync-from-mongodb.js
+   ```
+   В `.env` должен быть указан нужный `DATABASE_URL` (куда писать). Скрипт экспортирует из источника и восстанавливает в текущую БД.
+
+**Восстановление из бэкапа Plazma:**
+
+- **Локально:** `node scripts/restore-from-cloudinary.js "./database-backup-2025-12-07T17-30-20.json"`
+- **Railway:** `railway run npm run restore` (берёт последний бэкап из Cloudinary)
+
+Подробно: **НАПОЛНИТЬ_БАЗУ_ИЗ_БЭКАПА.md**
+
+## 📥 Перенос данных из другой MongoDB в Plazma
+
+Чтобы проанализировать исходную базу и перенести данные в текущую Plazma:
+
+1. **Анализ источника** (список баз и коллекций):
+   ```bash
+   SOURCE_MONGO_URL="mongodb://user:pass@host:port/plazma_bot?authSource=admin" node scripts/analyze-source-mongo.js
+   ```
+   Если аутентификация не проходит без `?authSource=admin`, добавьте этот параметр к URL.
+
+2. **Перенос в Plazma** (экспорт из источника + восстановление в `DATABASE_URL`):
+   ```bash
+   SOURCE_MONGO_URL="mongodb://user:pass@host:port/plazma_bot?authSource=admin" node scripts/sync-from-mongodb.js
+   ```
+   Убедитесь, что в `.env` задан **DATABASE_URL** — база, в которую нужно записать данные. Если с текущей машины нет доступа к целевой БД, скрипт сохранит экспорт в файл и выведет команду для ручного восстановления позже:
+   ```bash
+   node scripts/restore-from-cloudinary.js "/path/to/sync-from-source-XXXXX.json"
+   ```
+
+## 💡 Советы
+
+1. **DATABASE_URL** — используйте Railway MongoDB в формате: `mongodb://user:pass@host:port/plazma_bot?authSource=admin`
+2. **Проверяйте логи** после каждого изменения
+3. **Делайте бэкапы** (скрипты в `scripts/`) перед важными изменениями

@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игровая доска — Game Board v2.0</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" onerror="console.warn('⚠️ Failed to load Google Fonts, using system fonts')">
+    
+    <!-- Force cache busting and debugging -->
+    <script>
+                console.log('🚀 Game: Starting with cache bust v=12');
+        console.log('🚀 Game: Current timestamp:', Date.now());
+        
+        // Force clear any cached modules
+        if (window.playersManager) delete window.playersManager;
+        if (window.professionCard) delete window.professionCard;
+        if (window.dealsManager) delete window.dealsManager;
+        if (window.bankManager) delete window.bankManager;
+        if (window.gameDataApi) delete window.gameDataApi;
+        
+        // Clear all cached functions
+        if (window.getIconStyleClass) delete window.getIconStyleClass;
+        if (window.getIconForType) delete window.getIconForType;
+        
+        console.log('🧹 Game: Cleared cached modules and functions');
+        
+        // Add timestamp to all script tags to force reload
+        document.addEventListener('DOMContentLoaded', () => {
+                    const scripts = document.querySelectorAll('script[src*="v=12"]');
+                    console.log('🔍 Game: Found', scripts.length, 'scripts with v=12');
+            scripts.forEach((script, index) => {
+                console.log(`🔍 Game: Script ${index + 1}:`, script.src);
+            });
+        });
+        
+        // Check if fonts loaded successfully
+        document.fonts.ready.then(() => {
+            const interFont = document.fonts.check('16px Inter');
+            if (!interFont) {
+                console.warn('⚠️ Inter font not loaded, using system fonts');
+                document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+            }
+        }).catch(() => {
+            console.warn('⚠️ Font loading failed, using system fonts');
+            document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+        });
+
+        // Alternative font loading with timeout
+        setTimeout(() => {
+            const interFont = document.fonts.check('16px Inter');
+            if (!interFont) {
+                console.log('🔄 Trying alternative font loading...');
+                // Try to load from alternative CDN
+                const link = document.createElement('link');
+                link.href = 'https://fonts.bunny.net/css?family=inter:400,500,600,700,800';
+                link.rel = 'stylesheet';
+                link.onerror = () => {
+                    console.warn('⚠️ Alternative font CDN also failed, using system fonts');
+                    document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+                };
+                document.head.appendChild(link);
+            }
+        }, 3000);
+    </script>
+    <style>
+        :root {
+            --board-size: 700px;
+            --outer-cell-size: 54px;
+            --outer-cell-gap: 4px;
+            --inner-cell-size: 50px;
+            --sidebar-width: 320px;
+            --panel-bg: rgba(21, 27, 42, 0.9);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            color-scheme: dark;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(circle at 15% 20%, rgba(0, 234, 255, 0.18) 0%, transparent 55%),
+                        radial-gradient(circle at 78% 82%, rgba(255, 0, 128, 0.18) 0%, transparent 55%),
+                        linear-gradient(150deg, #0c1424 0%, #181f32 50%, #0a101f 100%);
+            color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 56px 48px 96px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .page-shell {
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            align-items: flex-start;
+            gap: 56px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .content-column {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(24px, calc(var(--computed-board-size, var(--board-size)) * 0.04), 36px);
+        }
+
+        .board-wrapper {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .board-frame {
+            position: relative;
+            width: var(--board-size);
+            height: var(--board-size);
+            border-radius: 48px;
+            background: linear-gradient(160deg, #151d30 0%, #111527 45%, #0f1422 100%);
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(255, 255, 255, 0.04);
+            overflow: visible;
+        }
+
+        .board-frame::before {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border-radius: 40px;
+            background: radial-gradient(circle at 50% 42%, rgba(255, 205, 64, 0.12) 0%, transparent 60%),
+                        linear-gradient(200deg, rgba(32, 48, 78, 0.7) 0%, rgba(16, 22, 34, 0.95) 62%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .outer-track,
+        .inner-track {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .track-cell {
+            position: absolute;
+            width: var(--outer-cell-size);
+            height: var(--outer-cell-size);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.14);
+            pointer-events: auto;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .track-cell:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 22px 46px rgba(0, 0, 0, 0.55);
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 6px;
+            left: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.92);
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell-icon {
+            font-size: 22px;
+            filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.35));
+        }
+
+        .cell-pink { background: linear-gradient(145deg, #ff4f93 0%, #ff2780 100%); }
+        .cell-green { background: linear-gradient(145deg, #32df8d 0%, #19b86a 100%); }
+        .cell-teal { background: linear-gradient(145deg, #25d0ff 0%, #0090f5 100%); }
+        .cell-purple { background: linear-gradient(145deg, #a769ff 0%, #7351ff 100%); }
+        .cell-orange { background: linear-gradient(145deg, #ffb347 0%, #ff8c42 100%); }
+        .cell-yellow { background: linear-gradient(145deg, #ffd65a 0%, #ffb700 100%); color: #2f2600; }
+        .cell-blue { background: linear-gradient(145deg, #4e95ff 0%, #2563eb 100%); }
+        .cell-red { background: linear-gradient(145deg, #ff6b6b 0%, #ff3b3b 100%); }
+        .cell-slate { background: linear-gradient(145deg, #34435a 0%, #1e2838 100%); }
+
+        .inner-track .track-cell {
+            width: var(--inner-cell-size);
+            height: var(--inner-cell-size);
+            font-size: 18px;
+            border-width: 1.5px;
+        }
+
+        .inner-track .cell-number {
+            right: 8px;
+            left: auto;
+            font-size: 12px;
+        }
+
+        .center-wheel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(var(--computed-board-size, var(--board-size)) * 0.32);
+            height: calc(var(--computed-board-size, var(--board-size)) * 0.32);
+            max-width: 230px;
+            max-height: 230px;
+            min-width: 170px;
+            min-height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 40%, rgba(255, 209, 64, 0.78) 0%, rgba(255, 166, 0, 0.82) 34%, rgba(25, 25, 25, 0.96) 64%);
+            box-shadow: 0 0 50px rgba(255, 196, 0, 0.5), inset 0 0 40px rgba(0, 0, 0, 0.55);
+            border: 4px solid rgba(255, 205, 92, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .center-wheel::before {
+            content: '';
+            position: absolute;
+            inset: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 45%, rgba(0, 0, 0, 0.92) 0%, rgba(40, 40, 40, 1) 65%, rgba(0, 0, 0, 0.94) 100%);
+            border: 2px solid rgba(255, 205, 92, 0.45);
+        }
+
+        .center-wheel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.35);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .center-wheel:hover {
+            transform: translate(-50%, -50%) scale(1.03);
+            box-shadow: 0 0 70px rgba(255, 196, 0, 0.65), inset 0 0 44px rgba(0, 0, 0, 0.6);
+        }
+
+        .center-wheel.spin::after {
+            opacity: 1;
+        }
+
+        .wheel-number {
+            position: relative;
+            font-size: clamp(48px, calc(var(--computed-board-size, var(--board-size)) * 0.12), 82px);
+            font-weight: 800;
+            color: #ffd15a;
+            text-shadow: 0 0 20px rgba(255, 196, 0, 0.55);
+            z-index: 2;
+        }
+
+        .player-tokens {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .player-token {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.35);
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            transform: translate(-50%, -50%);
+        }
+
+        .deal-strip {
+            margin-top: clamp(24px, calc(var(--computed-board-size, var(--board-size)) * 0.04), 36px);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: clamp(16px, calc(var(--computed-board-size, var(--board-size)) * 0.04), 24px);
+        }
+
+        .special-card {
+            width: clamp(150px, calc(var(--computed-board-size, var(--board-size)) * 0.22), 210px);
+            height: clamp(120px, calc(var(--computed-board-size, var(--board-size)) * 0.18), 150px);
+            border-radius: 24px;
+            padding: 18px;
+            background: linear-gradient(160deg, rgba(25, 36, 58, 0.92) 0%, rgba(14, 21, 37, 0.96) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 22px 44px rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        .special-card.big-deal {
+            border-color: rgba(0, 224, 255, 0.55);
+            box-shadow: 0 22px 40px rgba(0, 224, 255, 0.24);
+        }
+
+        .special-card.small-deal {
+            border-color: rgba(0, 132, 255, 0.55);
+            box-shadow: 0 22px 40px rgba(0, 132, 255, 0.2);
+        }
+
+        .special-card.expenses {
+            border-color: rgba(255, 64, 128, 0.55);
+            box-shadow: 0 24px 44px rgba(255, 64, 128, 0.26);
+        }
+
+        .special-card.market {
+            border-color: rgba(0, 255, 180, 0.55);
+            box-shadow: 0 24px 44px rgba(0, 255, 180, 0.2);
+        }
+
+        .special-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .special-metric {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            padding: 26px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+        }
+
+        .players-panel {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .players-list-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .player-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border 0.2s ease;
+        }
+
+        .player-card.is-active {
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.25);
+        }
+
+        .player-card.is-self {
+            border-color: rgba(16, 185, 129, 0.6);
+        }
+
+        .player-card-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .player-card-cash {
+            color: #22c55e;
+        }
+
+        .player-card-meta,
+        .player-card-stats {
+            display: none; /* Скрыто по запросу пользователя */
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .panel h3 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.82);
+            margin-bottom: 18px;
+        }
+
+        .status-panel .panel-body {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .status-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(123, 97, 255, 0.28) 0%, rgba(123, 97, 255, 0.14) 100%);
+            border: 1px solid rgba(123, 97, 255, 0.4);
+        }
+
+        .status-chip.is-my-turn {
+            border-color: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
+        }
+
+        .status-chip .status-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .status-chip .status-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-top: 4px;
+        }
+
+        .status-chip .status-icon {
+            font-size: 28px;
+        }
+
+        .last-roll {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .turn-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .turn-controls .btn {
+            flex: 1;
+        }
+
+        .turn-controls .btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .timer-readout {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .timer-readout .timer-value {
+            font-size: 34px;
+            font-weight: 800;
+        }
+
+        .timer-readout .timer-caption {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .finance-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .finance-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .finance-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .finance-value {
+            font-weight: 700;
+            color: #15f7a4;
+        }
+
+        .finance-value.negative {
+            color: #ff6b8a;
+        }
+
+        .loan-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(29, 233, 182, 0.15) 0%, rgba(29, 233, 182, 0.06) 100%);
+            border: 1px solid rgba(29, 233, 182, 0.35);
+            margin-top: 18px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #16f79e 0%, #06b973 100%);
+            color: #03110a;
+            box-shadow: 0 14px 26px rgba(6, 185, 115, 0.35);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff3b3b 100%);
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(255, 59, 59, 0.32);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn.is-disabled,
+        .btn:disabled {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            color: rgba(229, 231, 235, 0.65);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b973 0%, #00d4aa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1d24;
+            flex-shrink: 0;
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .user-details p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+
+        .profile-actions {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Стили для панели выбора стиля иконок */
+        .icon-style-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .icon-style-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .icon-style-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .icon-style-option.active {
+            background: rgba(0, 234, 255, 0.1);
+            border-color: #00eaff;
+        }
+
+        .icon-style-preview {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 16px;
+        }
+
+        .icon-style-info {
+            flex: 1;
+        }
+
+        .icon-style-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .icon-style-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Анимация сердечка для выбранной мечты */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1.2); }
+            75% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .dream-heart {
+            pointer-events: none;
+        }
+
+        .btn-exit {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-exit:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.4);
+        }
+
+        .assets-total {
+            font-size: 42px;
+            font-weight: 800;
+            color: #16f79e;
+            text-shadow: 0 0 22px rgba(22, 247, 158, 0.35);
+        }
+
+        .assets-caption {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 4px;
+        }
+
+        .assets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .assets-placeholder {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .asset-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .profession-panel .profession-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .profession-header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .profession-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .profession-name {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .profession-description {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .profession-finance {
+            display: grid;
+            gap: 8px;
+        }
+
+        .profession-finance div {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .profession-finance strong {
+            color: #16f79e;
+        }
+
+        .asset-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .asset-type {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .asset-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .asset-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .asset-transfer {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .asset-transfer-select {
+            flex: 1;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f3f4f6;
+            padding: 8px;
+        }
+
+        .cell-modal {
+            position: fixed;
+            inset: 0;
+            background: transparent;
+            backdrop-filter: none;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 50;
+        }
+
+        .deal-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 80;
+        }
+
+        .deal-modal.visible {
+            display: flex;
+        }
+
+        .deal-modal-content {
+            background: rgba(18, 24, 40, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 20px;
+            padding: 28px;
+            width: min(420px, 90vw);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .deal-modal-header {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .deal-modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .deal-modal-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .deal-modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .deal-card-details {
+            display: grid;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .deal-card-details span:first-child {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .game-toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: rgba(17, 24, 39, 0.92);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            color: #e5e7eb;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .game-toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cell-modal.show {
+            display: flex;
+        }
+
+        .modal-card {
+            position: relative;
+            width: min(420px, 100%);
+            border-radius: 28px;
+            padding: 32px 28px 28px;
+            background: linear-gradient(165deg, rgba(20, 27, 44, 0.95), rgba(13, 18, 32, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 28px 66px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .modal-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 28px;
+            background: var(--modal-accent, linear-gradient(135deg, rgba(79, 172, 254, 0.35), rgba(0, 242, 254, 0.22)));
+            opacity: 0.65;
+            z-index: -1;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.25);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: rgba(240, 244, 255, 0.82);
+            line-height: 1.6;
+        }
+
+        .modal-action {
+            align-self: flex-end;
+            padding: 12px 22px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            color: #0b1624;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1280px) {
+            :root {
+                --board-size: 640px;
+                --outer-cell-size: 48px;
+                --inner-cell-size: 46px;
+                --outer-cell-gap: 4px;
+            }
+            .page-shell { gap: 40px; }
+        }
+
+        @media (max-width: 1080px) {
+            :root {
+                --board-size: 600px;
+                --outer-cell-size: 44px;
+                --inner-cell-size: 44px;
+                --outer-cell-gap: 3px;
+            }
+        }
+
+        @media (max-width: 960px) {
+            :root {
+                --board-size: 560px;
+                --outer-cell-size: 40px;
+                --inner-cell-size: 40px;
+                --outer-cell-gap: 3px;
+            }
+            body { padding: 48px 32px 88px; }
+            .page-shell {
+                flex-direction: column;
+                align-items: center;
+                gap: 32px;
+            }
+            .content-column { order: 1; width: 100%; }
+            .deal-strip { order: 2; width: 100%; }
+            .sidebar {
+                width: min(440px, 100%);
+                order: 3;
+            }
+        }
+
+        /* Стили для панели игроков */
+        .players-panel {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .players-queue {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+            transition: all 0.3s ease;
+        }
+
+        .player-item.active {
+            background: rgba(72, 187, 120, 0.2);
+            border-left-color: #48bb78;
+            transform: scale(1.02);
+        }
+
+        .player-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .player-status {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .current-player {
+            padding: 16px;
+            background: rgba(72, 187, 120, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .current-player-title {
+            font-size: 0.9rem;
+            color: #68d391;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        /* Стили для модуля сделок */
+        .deals-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .deal-tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #a0aec0;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .deal-tab.active {
+            background: rgba(72, 187, 120, 0.2);
+            color: #68d391;
+        }
+
+        .deal-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+        }
+
+        .deals-content {
+            min-height: 200px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        /* Стили для кнопок банка и сделок */
+        .btn-bank, .btn-deals {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-deals {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .btn-bank:hover, .btn-deals:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --board-size: 520px;
+                --outer-cell-size: 36px;
+                --inner-cell-size: 36px;
+                --outer-cell-gap: 3px;
+            }
+            .deal-strip {
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --board-size: 480px;
+                --outer-cell-size: 32px;
+                --inner-cell-size: 34px;
+                --outer-cell-gap: 2px;
+            }
+            body { padding: 40px 24px 80px; }
+            .special-card { display: none; }
+            .deal-strip { display: none; }
+            .sidebar { width: 100%; }
+        }
+
+        @media (max-width: 520px) {
+            :root {
+                --board-size: 440px;
+                --outer-cell-size: 28px;
+                --inner-cell-size: 30px;
+                --outer-cell-gap: 2px;
+            }
+        }
+
+        @media (max-width: 460px) {
+            :root {
+                --board-size: 400px;
+                --outer-cell-size: 26px;
+                --inner-cell-size: 28px;
+                --outer-cell-gap: 2px;
+            }
+            body { padding: 36px 16px 72px; }
+            .panel { padding: 20px; border-radius: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="content-column">
+            <div class="board-wrapper">
+                <div class="board-frame">
+                    <div class="outer-track" id="outerTrack"></div>
+                    <div class="inner-track" id="innerTrack"></div>
+                    <div class="player-tokens" id="playerTokens"></div>
+
+                    <div class="center-wheel" id="centerWheel">
+                        <div class="wheel-number" id="wheelNumber">1</div>
+                    </div>
+                    </div>
+                    </div>
+                    
+            <div class="deal-strip">
+                <div class="special-card big-deal">
+                    <div class="special-title">💼 Большая сделка</div>
+                    <div class="special-metric">24 карты</div>
+                    <div class="special-metric">Премиум возможности</div>
+                    </div>
+                <div class="special-card small-deal">
+                    <div class="special-title">📦 Малая сделка</div>
+                    <div class="special-metric">32 карты</div>
+                    <div class="special-metric">Стартовые инвестиции</div>
+                </div>
+                <div class="special-card expenses">
+                    <div class="special-title">💳 Расходы</div>
+                    <div class="special-metric">24 карты</div>
+                    <div class="special-metric">Обязательные платежи</div>
+            </div>
+                <div class="special-card market">
+                    <div class="special-title">🛒 Рынок</div>
+                    <div class="special-metric">24 карты</div>
+                    <div class="special-metric">Спец. предложения</div>
+                </div>
+                </div>
+                </div>
+
+        <aside class="sidebar">
+            <div class="panel status-panel">
+                <h3>Игровая информация</h3>
+                <div class="panel-body">
+                    <div class="status-chip" id="turnStatusChip">
+                        <div>
+                            <div class="status-label">Текущее состояние</div>
+                            <div class="status-value" id="turnState">Подключение...</div>
+                        </div>
+                        <div class="status-icon">🕒</div>
+                    </div>
+                    <div class="last-roll">
+                        <span>Последний бросок:</span>
+                        <span id="lastRollValue">—</span>
+                    </div>
+                    <div class="turn-controls">
+                        <button class="btn btn-primary" id="rollDiceBtn">Бросить кубик</button>
+                        <button class="btn btn-secondary" id="endTurnBtn" disabled>Завершить ход</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel players-panel">
+                <h3>Игроки</h3>
+                <div id="playersPanelList" class="players-list-panel"></div>
+            </div>
+
+            <div class="panel finance-panel">
+                <h3>Банковские операции</h3>
+                <div class="finance-grid">
+                    <div class="finance-row">
+                        <span>Доход:</span>
+                        <span class="finance-value" id="incomeValue">$0</span>
+                    </div>
+                    <div class="finance-row">
+                        <span>Расходы:</span>
+                        <span class="finance-value negative" id="expenseValue">$0</span>
+                    </div>
+                    <div class="finance-row">
+                        <span>PAYDAY:</span>
+                        <span class="finance-value" id="paydayValue">$0/мес</span>
+                    </div>
+                </div>
+                <div class="loan-status">
+                    <span>Кредит:</span>
+                    <span class="finance-value" id="loanValue">$0</span>
+                </div>
+                <div class="finance-actions">
+                    <button class="btn btn-primary" id="bankButton">🏦 Банк</button>
+                    <button class="btn btn-primary" id="dealsButton">🃏 Сделки</button>
+                </div>
+            </div>
+
+            <div class="panel assets-panel">
+                <h3>Активы</h3>
+                <div class="assets-total" id="assetsTotal">$0</div>
+                <div class="assets-caption" id="assetsIncome">Доход: $0 / мес</div>
+                <div class="assets-list" id="assetsList"></div>
+                <button class="btn btn-secondary" id="assetsButton" style="margin-top: 10px; width: 100%;" onclick="window.dealsModule?.showAssetsCatalog()">
+                    📦 Каталог активов
+                </button>
+            </div>
+
+            <div class="panel profession-panel">
+                <h3>Профессия</h3>
+                <div class="profession-card" id="professionCard">
+                    <div class="profession-header">
+                        <span class="profession-icon" id="professionIcon">🚀</span>
+                        <div>
+                            <div class="profession-name" id="professionName">—</div>
+                            <div class="profession-description" id="professionDescription">—</div>
+                        </div>
+                    </div>
+                    <div class="profession-finance">
+                        <div><span>Зарплата</span><strong id="professionSalary">$0</strong></div>
+                        <div><span>Расходы</span><strong id="professionExpenses">$0</strong></div>
+                        <div><span>Денежный поток</span><strong id="professionCashflow">$0</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel icon-style-panel">
+                <h3>🎨 Стиль иконок</h3>
+                <div class="icon-style-options" id="iconStyleOptions">
+                    <!-- Опции стилей будут добавлены через JavaScript -->
+                </div>
+            </div>
+
+            <div class="panel players-panel">
+                <h3>👥 Игроки</h3>
+                <div class="players-queue" id="playersQueue">
+                    <!-- Список игроков в очереди будет добавлен динамически -->
+                </div>
+                <div class="current-player" id="currentPlayer">
+                    <!-- Текущий игрок -->
+                </div>
+            </div>
+
+            <div class="panel profession-panel">
+                <h3>💼 Карты профессий</h3>
+                <div class="profession-ui">
+                    <div class="profession-ui-header">
+                        <h3>Выберите профессию</h3>
+                    </div>
+                    <div class="profession-cards" id="professionCards">
+                        <!-- Карты профессий будут добавлены динамически -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel cards-panel">
+                <h3>🃏 Карты сделок</h3>
+                <div class="card-ui" id="cardUI">
+                    <div class="deals-tabs">
+                        <button class="deal-tab active" data-deal-type="big">Большая сделка</button>
+                        <button class="deal-tab" data-deal-type="small">Малая сделка</button>
+                        <button class="deal-tab" data-deal-type="market">Рынок</button>
+                        <button class="deal-tab" data-deal-type="expenses">Расходы</button>
+                    </div>
+                    <div class="deals-content" id="dealsContent">
+                        <!-- Содержимое сделок будет загружено динамически -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel profile-panel">
+                <h3>👤 Профиль</h3>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <div class="user-details">
+                        <h3 id="username">Пользователь</h3>
+                        <p id="userStatus">Онлайн</p>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button class="btn btn-bank" id="bankBtn">
+                        <span>🏦</span>
+                        <span>Банк</span>
+                    </button>
+                    <button class="btn btn-deals" id="dealsBtn">
+                        <span>📝</span>
+                        <span>Сделки</span>
+                    </button>
+                    <button class="btn btn-exit" id="leaveRoomBtn">
+                        <span>🚪</span>
+                        <span>Выйти</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="deal-modal" id="dealModal">
+        <div class="deal-modal-content">
+            <button class="deal-modal-close" data-role="deal-close">✕</button>
+            <div class="deal-modal-header" data-role="deal-header">Сделка</div>
+            <div class="deal-modal-body" data-role="deal-body"></div>
+            <div class="deal-modal-actions" data-role="deal-actions"></div>
+        </div>
+    </div>
+
+    <div class="cell-modal" id="cellModal">
+        <div class="modal-card" id="modalCard">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-icon" id="modalIcon">🎲</div>
+            <div class="modal-title" id="modalTitle">Клетка №1</div>
+            <div class="modal-text" id="modalText">Совершите действие согласно карточке.</div>
+            <button class="modal-action" id="modalAction">Понятно</button>
+        </div>
+    </div>
+
+    <!-- Bank Module v4 Modal -->
+    <div id="bankModal" class="bank-modal" style="display: none;">
+        <div class="bank-modal-content">
+            <!-- Header -->
+            <div class="bank-modal-header">
+                <div class="bank-header-left">
+                    <div class="bank-icon">🏦</div>
+                    <h2 class="bank-modal-title">Банковские операции <span style="color: #ff6b6b; font-size: 12px; font-weight: normal;">[v4-DEBUG]</span></h2>
+                </div>
+                <div class="bank-header-balance">
+                    <span style="color: #ffd700; font-weight: bold;">баланс</span>
+                    <span id="bankHeaderBalance" style="color: #00ff00; font-size: 1.5rem; font-weight: bold; margin-left: 10px;">$0</span>
+                </div>
+                <button class="bank-modal-close" onclick="closeBankV4()">&times;</button>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="bank-modal-body">
+                <!-- Left Column - Financial Summary -->
+                <div class="bank-info-column">
+                    <!-- Bank Status -->
+                    <div class="bank-status-section">
+                        <div class="bank-status-header">
+                            <div class="bank-icon-small">🏦</div>
+                            <span class="bank-status-label">Банк</span>
+                            <span class="bank-status-badge active">Активен</span>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Financial Details -->
+                    <div class="financial-details">
+                        <div class="financial-header">
+                            <div class="bank-icon-small">💰</div>
+                            <span>Финансовые детали</span>
+                        </div>
+                        <div class="financial-item">
+                            <span class="financial-label">Зарплата:</span>
+                            <span class="financial-value income" id="salaryAmount">$0</span>
+                        </div>
+                        <div class="financial-item">
+                            <span class="financial-label">Пассивный доход:</span>
+                            <span class="financial-value income" id="passiveIncomeAmount">$0</span>
+                        </div>
+                        <div class="financial-item">
+                            <span class="financial-label">Базовые расходы:</span>
+                            <span class="financial-value expense" id="baseExpensesAmount">$0</span>
+                        </div>
+                        <div class="financial-item">
+                            <span class="financial-label">Расходы на детей:</span>
+                            <span class="financial-value expense" id="childrenExpensesAmount">$0</span>
+                        </div>
+                        <div class="financial-item">
+                            <span class="financial-label">Общие расходы:</span>
+                            <span class="financial-value expense" id="totalExpensesAmount">$0</span>
+                        </div>
+                        <div class="financial-item total">
+                            <span class="financial-label">Чистый доход:</span>
+                            <span class="financial-value income" id="netIncomeAmount">$0</span>
+                        </div>
+                        <div class="payday-info">
+                            <span class="payday-label">PAYDAY:</span>
+                            <span class="payday-amount" id="paydayAmount">$0/мес</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Credit Information -->
+                    <div class="credit-info">
+                        <div class="credit-header">
+                            <div class="bank-icon-small">🏦</div>
+                            <span>Кредитная информация</span>
+                        </div>
+                        <div class="credit-item">
+                            <span class="credit-label">Текущий долг:</span>
+                            <span class="credit-value" id="currentDebt">$0</span>
+                        </div>
+                        <div class="credit-item">
+                            <span class="credit-label">Максимальный лимит:</span>
+                            <span class="credit-value" id="maxLimit">$0</span>
+                        </div>
+                        <div class="credit-item">
+                            <span class="credit-label">Свободный лимит:</span>
+                            <span class="credit-value available" id="freeLimit">$0</span>
+                        </div>
+                        <div class="credit-rule">
+                            Каждые $1000 кредита уменьшают PAYDAY на $100/мес
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column - Operations -->
+                <div class="bank-operations-column">
+                    <!-- Transfer Section -->
+                    <div class="transfer-section">
+                        <div class="section-header">
+                            <div class="bank-icon-small">💸</div>
+                            <span>Переводы</span>
+                        </div>
+                        <div class="transfer-form">
+                            <div class="form-group">
+                                <label for="recipientSelect">Получатель:</label>
+                                <select id="recipientSelect" class="form-select">
+                                    <option value="">Выберите получателя</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transferAmount">Сумма:</label>
+                                <input type="number" id="transferAmount" class="form-input" placeholder="0" min="1">
+                            </div>
+                            <button class="btn btn-primary" id="transferBtn" onclick="executeTransferV4()">
+                                Отправить
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Credit Section -->
+                    <div class="credit-section">
+                        <div class="section-header">
+                            <div class="bank-icon-small">💳</div>
+                            <span>Кредиты</span>
+                        </div>
+                        <div class="credit-actions">
+                            <div class="form-group">
+                                <label for="creditAmount">Сумма кредита:</label>
+                                <input type="number" id="creditAmount" class="form-input" placeholder="1000" min="1">
+                            </div>
+                            <div class="credit-buttons">
+                                <button class="btn btn-success" id="takeCreditBtn" onclick="takeCreditV4()">
+                                    Взять кредит
+                                </button>
+                                <button class="btn btn-warning" id="payoffCreditBtn" onclick="payoffCreditV4()">
+                                    Погасить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- History Section -->
+                    <div class="history-section">
+                        <div class="section-header">
+                            <div class="bank-icon-small">📋</div>
+                            <span>История операций</span>
+                            <span class="history-count" id="historyCount">0</span>
+                        </div>
+                        <div class="transfers-history" id="transfersHistory">
+                            <div class="transfer-empty">Нет операций</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-toast" id="gameToast"></div>
+
+    <!-- Загружаем конфигурацию игры -->
+    <script src="config/game-config.js" onerror="console.error('❌ Failed to load game-config.js')"></script>
+    <script src="config/big-circle-cells.js?v=11" onerror="console.error('❌ Failed to load big-circle-cells.js')"></script>
+    <script src="config/small-circle-cells.js?v=11" onerror="console.error('❌ Failed to load small-circle-cells.js')"></script>
+    <script src="config/icon-styles.js?v=11" onerror="console.error('❌ Failed to load icon-styles.js')"></script>
+    
+    <!-- Проверяем загрузку конфигураций -->
+    <script>
+        // Проверяем загрузку скриптов
+        const scriptTags = document.querySelectorAll('script[src*="config/"]');
+        console.log('🔍 Found config scripts:', scriptTags.length);
+        scriptTags.forEach(script => {
+            console.log('🔍 Script:', script.src, 'loaded:', script.readyState);
+        });
+        
+        console.log('🔍 Config check - TEST_CONFIG:', typeof TEST_CONFIG, 'length:', TEST_CONFIG?.length);
+        console.log('🔍 Config check - SMALL_CIRCLE_CELLS:', typeof SMALL_CIRCLE_CELLS, 'length:', SMALL_CIRCLE_CELLS?.length);
+        console.log('🔍 Config check - getIconForType:', typeof getIconForType);
+        console.log('🔍 Config check - getIconStyleClass:', typeof getIconStyleClass);
+        
+        // Проверяем, загружены ли конфигурации
+        console.log('🔍 Config check - SMALL_CIRCLE_CELLS:', typeof SMALL_CIRCLE_CELLS, 'length:', SMALL_CIRCLE_CELLS?.length);
+    </script>
+    
+    <!-- Встроенные конфигурации как fallback -->
+    <script>
+        function loadEmbeddedConfigs() {
+            console.log('🔍 Loading embedded configs...');
+            
+            // Загружаем только если конфигурации не загружены
+            if (typeof window.SMALL_CIRCLE_CELLS === 'undefined' || window.SMALL_CIRCLE_CELLS.length === 0) {
+                console.log('🔍 SMALL_CIRCLE_CELLS not loaded, using embedded version...');
+                
+                // Встроенная конфигурация SMALL_CIRCLE_CELLS
+                window.SMALL_CIRCLE_CELLS = [
+                { id: 1, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 2, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 3, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 4, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 5, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 6, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 7, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 8, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 9, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 10, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 11, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 12, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 13, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 14, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 15, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 16, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 17, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 18, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 19, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 20, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 21, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 22, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                { id: 23, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                { id: 24, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' }
+            ];
+            
+                // Встроенные функции для иконок
+                window.getIconForType = function(cellType, style = 'emoji') {
+                    const icons = {
+                        'green_opportunity': '💚',
+                        'pink_expense': '🛒',
+                        'blue_opportunity': '💙',
+                        'yellow_expense': '💛',
+                        'red_expense': '❤️',
+                        'purple_opportunity': '💜'
+                    };
+                    return icons[cellType] || '⬤';
+                };
+                
+                window.getIconStyleClass = function(style = 'emoji') {
+                    return style === 'monochrome' ? 'icon-monochrome' : '';
+                };
+                
+                console.log('✅ Embedded configs loaded:', window.SMALL_CIRCLE_CELLS.length, 'cells');
+            } else {
+                console.log('✅ External configs already loaded, skipping embedded fallback');
+            }
+        }
+    </script>
+    
+    <!-- Загружаем основные модули -->
+    <script src="assets/js/core/EventBus.js"></script>
+    <script src="assets/js/core/StateManager.js"></script>
+    <script src="assets/js/core/ModuleManager.js"></script>
+    <script src="assets/js/core/GameCore.js"></script>
+    <script type="module" src="assets/js/services/PushNotificationService.js"></script>
+    
+    <!-- Загружаем API клиент -->
+    <script src="assets/js/modules/api/ApiClient.js"></script>
+        <script src="assets/js/modules/api/GameDataApi.js?v=11"></script>
+    
+        <!-- Загружаем игровые модули -->
+        <script src="assets/js/modules/game/Board.js"></script>
+            <script src="assets/js/modules/game/BoardLayout.js?v=12"></script>
+        <script src="assets/js/modules/game/CellPopup.js"></script>
+        <script src="assets/js/modules/game/CardManager.js"></script>
+        <script src="assets/js/modules/game/CardUI.js"></script>
+        <script src="assets/js/modules/game/PlayersManager.js?v=11"></script>
+        <script src="assets/js/modules/game/ProfessionCard.js?v=11"></script>
+        <script src="game-board/config/full-cards-config.js?v=1"></script>
+        <script src="game-board/config/cards-config.js?v=1"></script>
+        <script src="assets/js/modules/game/DealsModule.js?v=1"></script>
+        <script>
+            // Инициализация DealsModule
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof DealsModule !== 'undefined') {
+                    window.dealsModule = new DealsModule();
+                    console.log('🎴 DealsModule инициализирован');
+                } else {
+                    console.error('❌ DealsModule не найден');
+                }
+            });
+        </script>
+        <script src="assets/js/modules/game/DealsManager.js?v=11"></script>
+        
+        <!-- Bank Module v4 -->
+        <link rel="stylesheet" href="bank-module-v4/bank-styles-v4.css?v=4.1">
+        <!-- DataStore - единое место хранения данных -->
+        <script src="assets/js/modules/game/DataStore.js?v=1"></script>
+        <script src="assets/js/modules/game/DataStoreAdapter.js?v=1"></script>
+        
+        <script src="bank-module-v4/bank-module-v4.js?v=4.1"></script>
+        <script src="bank-module-v4/integration.js?v=4.1"></script>
+        
+        <script src="game-board/professions-data.js"></script>
+    
+    <!-- Инициализируем игру -->
+    <script>
+        (async () => {
+            try {
+                console.log('🎮 Initializing game...');
+                
+                // Сначала загружаем встроенные конфигурации
+                console.log('🔍 Game: Loading embedded configs first...');
+                console.log('🔍 Game: loadEmbeddedConfigs type:', typeof loadEmbeddedConfigs);
+                console.log('🔍 Game: Available functions:', Object.keys(window).filter(k => k.includes('load') || k.includes('config')));
+                
+                if (typeof loadEmbeddedConfigs === 'function') {
+                    console.log('🔍 Game: Calling loadEmbeddedConfigs...');
+                    loadEmbeddedConfigs();
+                    console.log('🔍 Game: loadEmbeddedConfigs called, checking result...');
+                    console.log('🔍 Game: SMALL_CIRCLE_CELLS after call:', typeof SMALL_CIRCLE_CELLS, 'length:', SMALL_CIRCLE_CELLS?.length);
+                } else {
+                    console.error('❌ Game: loadEmbeddedConfigs function not found!');
+                    console.log('🔍 Game: Loading configs directly...');
+                    
+                    // Загружаем конфигурации напрямую
+                    window.SMALL_CIRCLE_CELLS = [
+                        { id: 1, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 2, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 3, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 4, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 5, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 6, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 7, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 8, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 9, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 10, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 11, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 12, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 13, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 14, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 15, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 16, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 17, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 18, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 19, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 20, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 21, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 22, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' },
+                        { id: 23, type: 'green_opportunity', name: 'Зеленая возможность', description: 'Малая / большая (на выбор)', color: 'green', icon: '💚', action: 'choose_opportunity' },
+                        { id: 24, type: 'pink_expense', name: 'Всякая всячина', description: 'Клетка с обязательными тратами от 100 до 4000$ на разные нужды', color: 'pink', icon: '🛒', action: 'draw_expense' }
+                    ];
+                    
+                    window.getIconForType = function(cellType, style = 'emoji') {
+                        const icons = {
+                            'green_opportunity': '💚',
+                            'pink_expense': '🛒',
+                            'blue_opportunity': '💙',
+                            'yellow_expense': '💛',
+                            'red_expense': '❤️',
+                            'purple_opportunity': '💜'
+                        };
+                        return icons[cellType] || '⬤';
+                    };
+                    
+                    window.getIconStyleClass = function(style = 'emoji') {
+                        return style === 'monochrome' ? 'icon-monochrome' : '';
+                    };
+                    
+                    console.log('✅ Direct configs loaded:', window.SMALL_CIRCLE_CELLS.length, 'cells');
+                }
+                
+                // Ждем загрузки всех конфигурационных файлов
+                await waitForConfigs();
+                console.log('✅ Configs loaded successfully');
+                
+                // Создаем экземпляр GameCore
+                window.gameCore = new GameCore();
+                
+                // Инициализируем
+                await window.gameCore.init();
+                
+                console.log('✅ Game initialized successfully');
+                
+                // Рендерим клетки доски
+                console.log('🔍 Game: Checking renderTracks function...');
+                if (typeof window.renderTracks === 'function') {
+                    console.log('🔍 Game: Calling renderTracks...');
+                    window.renderTracks(window.currentRoom);
+                } else {
+                    console.warn('⚠️ Game: renderTracks function not found');
+                }
+                
+                // Обновляем статус
+                const statusElement = document.getElementById('turnState');
+                if (statusElement) {
+                    statusElement.textContent = 'Готов к игре';
+                }
+                
+                // Инициализируем панель выбора стиля иконок
+                initIconStylePanel();
+                
+                // Добавляем автоматический переход к игре через 3 секунды
+                addAutoGameTransition();
+                
+                // Инициализируем CellPopup
+                if (typeof CellPopup !== 'undefined') {
+                    window.cellPopup = new CellPopup();
+                    console.log('✅ CellPopup initialized');
+                } else {
+                    console.warn('⚠️ CellPopup not found');
+                }
+                
+                // Инициализируем CardManager
+                if (typeof CardManager !== 'undefined') {
+                    window.cardManager = new CardManager();
+                    console.log('✅ CardManager initialized');
+                } else {
+                    console.warn('⚠️ CardManager not found');
+                }
+                
+                  // Инициализируем CardUI
+                  if (typeof CardUI !== 'undefined' && window.cardManager) {
+                      window.cardUI = new CardUI(window.cardManager);
+                      console.log('✅ CardUI initialized');
+                  } else {
+                      console.warn('⚠️ CardUI not found or CardManager not initialized');
+                  }
+                  
+                  // Инициализируем ProfessionManager
+                  if (typeof ProfessionManager !== 'undefined') {
+                      window.professionManager = new ProfessionManager();
+                      console.log('✅ ProfessionManager initialized');
+                  } else {
+                      console.warn('⚠️ ProfessionManager not found');
+                  }
+                  
+                // Инициализируем ProfessionUI
+                if (typeof ProfessionUI !== 'undefined' && window.professionManager) {
+                    window.professionUI = new ProfessionUI(window.professionManager);
+                    console.log('✅ ProfessionUI initialized');
+                } else {
+                    console.warn('⚠️ ProfessionUI not found or ProfessionManager not initialized');
+                }
+                
+                // Добавляем обработчики для кнопок банка
+                const bankButton = document.getElementById('bankButton');
+                if (bankButton) {
+                    bankButton.addEventListener('click', () => {
+                        console.log('🏦 Bank button clicked, opening BankModuleV4...');
+                        if (typeof window.openBankV4 === 'function') {
+                            window.openBankV4();
+                        } else {
+                            console.error('❌ openBankV4 function not found!');
+                        }
+                    });
+                    console.log('✅ Bank button event listener added');
+                } else {
+                    console.warn('⚠️ Bank button not found');
+                }
+                
+                // Также добавляем обработчик для второй кнопки банка
+                const bankBtn = document.getElementById('bankBtn');
+                if (bankBtn) {
+                    bankBtn.addEventListener('click', () => {
+                        console.log('🏦 Bank btn clicked, opening BankModuleV4...');
+                        if (typeof window.openBankV4 === 'function') {
+                            window.openBankV4();
+                        } else {
+                            console.error('❌ openBankV4 function not found!');
+                        }
+                    });
+                    console.log('✅ Bank btn event listener added');
+                } else {
+                    console.warn('⚠️ Bank btn not found');
+                }
+                
+                // Обработчик выхода: очистить данные сессии и перейти на авторизацию
+                const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+                if (leaveRoomBtn) {
+                    leaveRoomBtn.addEventListener('click', async () => {
+                        try {
+                            console.log('🚪 Leave button clicked — clearing session and redirecting');
+                            leaveRoomBtn.disabled = true;
+                            leaveRoomBtn.dataset.loading = 'true';
+
+                            // Останавливаем таймеры/анимации на странице
+                            try { window._isAnimatingMove = false; } catch (_) {}
+
+                            // Полная очистка sessionStorage/localStorage
+                            try { sessionStorage.clear(); } catch (_) {}
+                            try { localStorage.clear(); } catch (_) {}
+
+                            // На всякий случай очистим ключевые записи снова адресно
+                            const keysToClear = [
+                                'user',
+                                'token',
+                                'currentRoom',
+                                'rooms',
+                                'roomId',
+                                'turnState',
+                                'gameState',
+                                'playersState'
+                            ];
+                            keysToClear.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+
+                            // Удаляем все куки (если есть)
+                            try {
+                                document.cookie.split(';').forEach(c => {
+                                    const eqPos = c.indexOf('=');
+                                    const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+                                    if (name) document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                                });
+                            } catch (_) {}
+
+                            // Жесткий редирект без сохранения в истории назад
+                            window.location.replace('auth.html');
+                        } catch (e) {
+                            console.error('❌ Failed to handle leave action:', e);
+                            window.location.href = 'auth.html';
+                        }
+                    });
+                    console.log('✅ Leave button event listener added');
+                } else {
+                    console.warn('⚠️ Leave button not found');
+                }
+
+            } catch (error) {
+                console.error('❌ Failed to initialize game:', error);
+                
+                const statusElement = document.getElementById('turnState');
+                if (statusElement) {
+                    statusElement.textContent = 'Ошибка инициализации';
+                }
+            }
+        })();
+        
+        // Функция ожидания загрузки конфигураций
+        async function waitForConfigs() {
+            console.log('🔍 Checking configs... TEST_CONFIG:', typeof TEST_CONFIG, 'SMALL_CIRCLE_CELLS:', typeof SMALL_CIRCLE_CELLS, 'length:', SMALL_CIRCLE_CELLS?.length);
+            
+            // Проверяем, загружены ли конфигурации
+            if (typeof SMALL_CIRCLE_CELLS !== 'undefined' && SMALL_CIRCLE_CELLS.length > 0) {
+                console.log('✅ SMALL_CIRCLE_CELLS loaded:', SMALL_CIRCLE_CELLS.length);
+                return;
+            }
+            
+            // Если не загружены, ждем немного и проверяем снова
+            console.log('⏳ Configs not ready, waiting 500ms...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (typeof SMALL_CIRCLE_CELLS !== 'undefined' && SMALL_CIRCLE_CELLS.length > 0) {
+                console.log('✅ SMALL_CIRCLE_CELLS loaded after wait:', SMALL_CIRCLE_CELLS.length);
+                return;
+            }
+            
+            console.log('⚠️ External configs not loaded, embedded configs should be available');
+            console.log('🔍 Available globals:', Object.keys(window).filter(k => k.includes('CELLS') || k.includes('CONFIG')));
+        }
+        
+        // Функция для обновления доски с информацией о комнате
+        function updateBoardWithRoom(room) {
+            console.log('🔍 Game: Updating board with room data:', room);
+            if (typeof window.renderTracks === 'function') {
+                window.renderTracks(room);
+            }
+        }
+        
+        // Экспортируем функцию глобально для доступа из других модулей
+        window.updateBoardWithRoom = updateBoardWithRoom;
+        
+        // Слушаем изменения в localStorage для обновления доски
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'currentRoom' && e.newValue) {
+                try {
+                    const room = JSON.parse(e.newValue);
+                    updateBoardWithRoom(room);
+                } catch (error) {
+                    console.error('Error parsing room data:', error);
+                }
+            }
+        });
+        
+        // Также слушаем события от RoomState
+        window.addEventListener('roomUpdated', (e) => {
+            if (e.detail && e.detail.room) {
+                updateBoardWithRoom(e.detail.room);
+            }
+        });
+        
+        // Инициализация панели выбора стиля иконок
+        function initIconStylePanel() {
+            const container = document.getElementById('iconStyleOptions');
+            if (!container) return;
+            
+            // Получаем доступные стили
+            const styles = window.cellPopup ? window.cellPopup.getAvailableStyles() : [
+                { key: 'emoji', name: 'Эмодзи', description: 'Цветные эмодзи иконки' },
+                { key: 'monochrome', name: 'Однотонные', description: 'Однотонные силуэты' },
+                { key: 'outline', name: 'Контурные', description: 'Только контуры' },
+                { key: 'minimal', name: 'Минималистичные', description: 'Простые формы' }
+            ];
+            
+            // Очищаем контейнер
+            container.innerHTML = '';
+            
+            // Создаем опции
+            styles.forEach(style => {
+                const option = document.createElement('div');
+                option.className = 'icon-style-option';
+                option.dataset.style = style.key;
+                
+                // Получаем иконку для превью
+                const previewIcon = getIconForType ? getIconForType('green_opportunity', style.key) : '💚';
+                const iconClass = getIconStyleClass ? getIconStyleClass(style.key) : '';
+                
+                option.innerHTML = `
+                    <div class="icon-style-preview ${iconClass}">${previewIcon}</div>
+                    <div class="icon-style-info">
+                        <div class="icon-style-name">${style.name}</div>
+                        <div class="icon-style-description">${style.description}</div>
+                    </div>
+                `;
+                
+                // Обработчик клика
+                option.addEventListener('click', () => {
+                    // Убираем активный класс с других опций
+                    container.querySelectorAll('.icon-style-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    
+                    // Добавляем активный класс к выбранной опции
+                    option.classList.add('active');
+                    
+                    // Устанавливаем стиль
+                    if (window.cellPopup) {
+                        window.cellPopup.setIconStyle(style.key);
+                    }
+                    
+                    // Перерисовываем доску с новым стилем
+                    if (typeof window.renderTracks === 'function') {
+                        window.renderTracks(window.currentRoom);
+                    }
+                });
+                
+                container.appendChild(option);
+            });
+            
+            // Устанавливаем активный стиль по умолчанию
+            const currentStyle = localStorage.getItem('iconStyle') || 'emoji';
+            const activeOption = container.querySelector(`[data-style="${currentStyle}"]`);
+            if (activeOption) {
+                activeOption.classList.add('active');
+            }
+        }
+        
+        // Функция для автоматического перехода к игре через 3 секунды
+        function addAutoGameTransition() {
+            // Проверяем настройки пользователя
+            const autoTransitionEnabled = localStorage.getItem('autoGameTransition') !== 'false';
+            const transitionDelay = parseInt(localStorage.getItem('autoGameTransitionDelay')) || 3;
+            
+            if (!autoTransitionEnabled) {
+                console.log('⏰ Auto game transition disabled by user settings');
+                return;
+            }
+            
+            console.log(`⏰ Setting up auto game transition in ${transitionDelay} seconds...`);
+            
+            // Обновляем статус для показа обратного отсчета
+            const statusElement = document.getElementById('turnState');
+            if (statusElement) {
+                statusElement.textContent = `Переход к игре через ${transitionDelay} секунды...`;
+            }
+            
+            // Создаем визуальный индикатор обратного отсчета
+            const countdownElement = document.createElement('div');
+            countdownElement.id = 'countdownTimer';
+            countdownElement.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: #00ff00;
+                font-size: 48px;
+                font-weight: bold;
+                padding: 30px 50px;
+                border-radius: 20px;
+                border: 2px solid #00ff00;
+                z-index: 9999;
+                text-align: center;
+                box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                min-width: 300px;
+            `;
+            
+            // Создаем контейнер для текста и кнопки
+            const contentDiv = document.createElement('div');
+            contentDiv.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            `;
+            
+            const countdownText = document.createElement('div');
+            countdownText.id = 'countdownText';
+            countdownText.textContent = '3';
+            countdownText.style.cssText = `
+                font-size: 48px;
+                font-weight: bold;
+                color: #00ff00;
+            `;
+            
+            const countdownLabel = document.createElement('div');
+            countdownLabel.textContent = 'Переход к игре через...';
+            countdownLabel.style.cssText = `
+                font-size: 16px;
+                color: #ffffff;
+                margin-bottom: 10px;
+            `;
+            
+            // Кнопка отмены
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Отменить';
+            cancelBtn.style.cssText = `
+                background: linear-gradient(135deg, #ff6b6b 0%, #ff3b3b 100%);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            `;
+            
+            // Добавляем hover эффект для кнопки
+            cancelBtn.addEventListener('mouseenter', () => {
+                cancelBtn.style.transform = 'translateY(-2px)';
+                cancelBtn.style.boxShadow = '0 4px 12px rgba(255, 59, 59, 0.4)';
+            });
+            
+            cancelBtn.addEventListener('mouseleave', () => {
+                cancelBtn.style.transform = 'translateY(0)';
+                cancelBtn.style.boxShadow = 'none';
+            });
+            
+            contentDiv.appendChild(countdownLabel);
+            contentDiv.appendChild(countdownText);
+            contentDiv.appendChild(cancelBtn);
+            countdownElement.appendChild(contentDiv);
+            document.body.appendChild(countdownElement);
+            
+            // Обратный отсчет
+            let countdown = transitionDelay;
+            let isCancelled = false;
+            
+            const countdownInterval = setInterval(() => {
+                if (isCancelled) {
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                
+                countdown--;
+                if (countdown > 0) {
+                    countdownText.textContent = countdown.toString();
+                } else {
+                    countdownText.textContent = 'Переход к игре...';
+                    clearInterval(countdownInterval);
+                    
+                    // Переход к игре через небольшую задержку
+                    setTimeout(() => {
+                        if (isCancelled) return;
+                        
+                        // Удаляем индикатор
+                        if (countdownElement.parentNode) {
+                            countdownElement.parentNode.removeChild(countdownElement);
+                        }
+                        
+                        // Выполняем переход к игре
+                        console.log('🎮 Auto transitioning to game...');
+                        
+                        // Обновляем статус
+                        if (statusElement) {
+                            statusElement.textContent = 'Запуск игры...';
+                        }
+                        
+                        // Симулируем клик по кнопке "Бросить кубик" для начала игры
+                        const rollDiceBtn = document.getElementById('rollDiceBtn');
+                        if (rollDiceBtn && !rollDiceBtn.disabled) {
+                            console.log('🎲 Auto clicking roll dice button...');
+                            rollDiceBtn.click();
+                        } else {
+                            console.log('⚠️ Roll dice button not available, trying alternative game start...');
+                            
+                            // Альтернативный способ - попробуем запустить игру через GameCore
+                            if (window.gameCore && typeof window.gameCore.startGame === 'function') {
+                                window.gameCore.startGame().then(() => {
+                                    console.log('✅ Game started via GameCore');
+                                }).catch(error => {
+                                    console.error('❌ Failed to start game via GameCore:', error);
+                                });
+                            }
+                        }
+                    }, 500);
+                }
+            }, 1000);
+            
+            // Обработчик отмены
+            cancelBtn.addEventListener('click', () => {
+                isCancelled = true;
+                clearInterval(countdownInterval);
+                
+                // Удаляем индикатор
+                if (countdownElement.parentNode) {
+                    countdownElement.parentNode.removeChild(countdownElement);
+                }
+                
+                // Обновляем статус
+                if (statusElement) {
+                    statusElement.textContent = 'Готов к игре';
+                }
+                
+                console.log('❌ Auto game transition cancelled by user');
+            });
+        }
+        
+        // Функции для управления настройками автоматического перехода
+        window.setAutoGameTransition = function(enabled, delay = 3) {
+            localStorage.setItem('autoGameTransition', enabled.toString());
+            localStorage.setItem('autoGameTransitionDelay', delay.toString());
+            console.log(`⏰ Auto game transition ${enabled ? 'enabled' : 'disabled'}, delay: ${delay}s`);
+        };
+        
+        window.getAutoGameTransitionSettings = function() {
+            return {
+                enabled: localStorage.getItem('autoGameTransition') !== 'false',
+                delay: parseInt(localStorage.getItem('autoGameTransitionDelay')) || 3
+            };
+        };
+        
+        // Добавляем команды в консоль для удобства
+        console.log('🎮 Auto game transition commands available:');
+        console.log('  setAutoGameTransition(true, 5) - включить с задержкой 5 секунд');
+        console.log('  setAutoGameTransition(false) - отключить');
+        console.log('  getAutoGameTransitionSettings() - посмотреть текущие настройки');
+    </script>
+
+    <!-- Дополнительная диагностика -->
+    <script>
+        // Проверка через 1 секунду
+        setTimeout(() => {
+            console.log('🔍 EARLY CHECK (1s) - Module loading status:');
+            console.log('🔍 Game: getIconStyleClass:', typeof window.getIconStyleClass);
+            if (window.getIconStyleClass) {
+                console.log('🔍 Game: getIconStyleClass test result:', window.getIconStyleClass('emoji'));
+            }
+            console.log('🔍 Game: playersManager:', typeof window.playersManager);
+            console.log('🔍 Game: gameDataApi:', typeof window.gameDataApi);
+        }, 1000);
+        
+        // Финальная проверка всех модулей через 3 секунды
+        setTimeout(() => {
+            console.log('🔍 FINAL CHECK (3s) - All modules status:');
+            console.log('🔍 Game: BIG_CIRCLE_CELLS:', typeof window.BIG_CIRCLE_CELLS, 'length:', window.BIG_CIRCLE_CELLS?.length);
+            console.log('🔍 Game: SMALL_CIRCLE_CELLS:', typeof window.SMALL_CIRCLE_CELLS, 'length:', window.SMALL_CIRCLE_CELLS?.length);
+            console.log('🔍 Game: getIconForType:', typeof window.getIconForType);
+            console.log('🔍 Game: getIconStyleClass:', typeof window.getIconStyleClass);
+            if (window.getIconStyleClass) {
+                console.log('🔍 Game: getIconStyleClass test result:', window.getIconStyleClass('emoji'));
+            }
+            
+            console.log('🔍 Game: playersManager:', typeof window.playersManager);
+            console.log('🔍 Game: professionCard:', typeof window.professionCard);
+            console.log('🔍 Game: dealsManager:', typeof window.dealsManager);
+            console.log('🔍 Game: bankManager:', typeof window.bankManager);
+            console.log('🔍 Game: gameDataApi:', typeof window.gameDataApi);
+            
+            // Проверяем DOM элементы
+            const playersQueue = document.getElementById('playersQueue');
+            console.log('🔍 Game: playersQueue element:', playersQueue);
+            if (playersQueue) {
+                console.log('🔍 Game: playersQueue children:', playersQueue.children.length);
+            }
+            
+            // Проверяем загруженные скрипты
+            const allScripts = document.querySelectorAll('script[src]');
+            console.log('🔍 Game: Total scripts loaded:', allScripts.length);
+                    const v12Scripts = document.querySelectorAll('script[src*="v=12"]');
+                    console.log('🔍 Game: v=12 scripts loaded:', v12Scripts.length);
+        }, 3000);
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "give-savings": "node give-starting-savings.js",
+    "give-savings-all": "node give-starting-savings.js --all",
+    "give-savings-room": "node give-starting-savings.js"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src",
+    "src/types/api.ts",
+    "src/types/admin.ts",
+    "src/admin/web-simple-refactored.ts",
+    "src/server-simple-refactored.ts",
+    "src/config/**/*",
+    "src/lib/**/*",
+    "src/bot/**/*",
+    "src/modules/**/*",
+    "src/services/partner-service.ts",
+    "src/webapp/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/types/validation.ts",
+    "src/interfaces/**/*",
+    "src/repositories/**/*",
+    "src/controllers/**/*",
+    "src/services/admin/**/*",
+    "src/admin/web-refactored.ts",
+    "src/server-refactored.ts"
+  ]
+}

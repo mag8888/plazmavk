@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Денежный поток - Cashflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a1a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        .game-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        .game-board {
+            flex: 1;
+            background: #1a1a2e;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .board-container {
+            position: relative;
+            width: 800px;
+            height: 800px;
+            background: #2d3748;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Внешний трек (52 клетки) */
+        .outer-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .outer-cell {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #10b981;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .outer-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        /* Угловые клетки */
+        .corner-cell {
+            position: absolute;
+            width: 80px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            padding: 5px;
+        }
+
+        .corner-big-deal { background: #f59e0b; top: 20px; left: 20px; }
+        .corner-small-deal { background: #10b981; top: 20px; right: 20px; }
+        .corner-expenses { background: #ef4444; bottom: 20px; left: 20px; }
+        .corner-market { background: #3b82f6; bottom: 20px; right: 20px; }
+
+        /* Внутренний спиральный трек */
+        .inner-track {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+        }
+
+        .inner-cell {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .inner-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        /* Центральная область */
+        .center-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 30px rgba(251, 191, 36, 0.6),
+                inset 0 0 20px rgba(255, 255, 255, 0.3);
+            z-index: 20;
+        }
+
+        .dice {
+            width: 40px;
+            height: 40px;
+            background: white;
+            color: #1f2937;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .dollar-signs {
+            display: flex;
+            gap: 2px;
+        }
+
+        .dollar-sign {
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Фишки игроков */
+        .player-token {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            z-index: 15;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 2px solid white;
+        }
+
+        .player-1 { background: #ef4444; }
+        .player-2 { background: #3b82f6; }
+        .player-3 { background: #ec4899; }
+
+        /* Боковая панель */
+        .sidebar {
+            width: 300px;
+            background: #1e293b;
+            padding: 20px;
+            border-left: 2px solid #10b981;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .section {
+            background: #334155;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        .section-title {
+            color: #10b981;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .button:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #475569;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s ease;
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: #475569;
+            border-radius: 6px;
+        }
+
+        .player-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .player-role {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .player-status {
+            color: #10b981;
+            font-size: 10px;
+        }
+
+        /* Цвета клеток */
+        .cell-green { background: #10b981; }
+        .cell-blue { background: #3b82f6; }
+        .cell-pink { background: #ec4899; }
+        .cell-orange { background: #f59e0b; }
+        .cell-yellow { background: #eab308; }
+        .cell-purple { background: #8b5cf6; }
+        .cell-red { background: #ef4444; }
+        .cell-gray { background: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-board">
+            <div class="board-container">
+                <!-- Внешний трек -->
+                <div class="outer-track" id="outerTrack"></div>
+                
+                <!-- Угловые клетки -->
+                <div class="corner-cell corner-big-deal">
+                    <div>💰</div>
+                    <div>Большая сделка</div>
+                </div>
+                <div class="corner-cell corner-small-deal">
+                    <div>💼</div>
+                    <div>Малая сделка</div>
+                </div>
+                <div class="corner-cell corner-expenses">
+                    <div>💸</div>
+                    <div>Расходы</div>
+                </div>
+                <div class="corner-cell corner-market">
+                    <div>🏢</div>
+                    <div>Рынок</div>
+                </div>
+                
+                <!-- Внутренний трек -->
+                <div class="inner-track" id="innerTrack"></div>
+                
+                <!-- Центральная область -->
+                <div class="center-area">
+                    <div class="dice" id="dice">5</div>
+                    <div class="dollar-signs">
+                        <span class="dollar-sign">$</span>
+                        <span class="dollar-sign">$</span>
+                        <span class="dollar-sign">$</span>
+                        <span class="dollar-sign">$</span>
+                    </div>
+                </div>
+                
+                <!-- Фишки игроков -->
+                <div class="player-token player-1" id="player1" style="top: 200px; left: 300px;">1</div>
+                <div class="player-token player-2" id="player2" style="top: 220px; left: 320px;">2</div>
+                <div class="player-token player-3" id="player3" style="top: 200px; left: 340px;">3</div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="section">
+                <div class="section-title">Активы</div>
+                <button class="button">
+                    <span>🏢</span>
+                    <span>Активы</span>
+                    <span>▼</span>
+                </button>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Действия</div>
+                <button class="button" id="rollDiceBtn">
+                    <span>🎲</span>
+                    <span>Бросить кубик</span>
+                </button>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Время хода</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="timeProgress" style="width: 100%;"></div>
+                </div>
+                <div style="text-align: center; font-size: 12px; color: #94a3b8;">
+                    <span id="timeDisplay">2:00 / 2:00</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Очередность игроков</div>
+                <div class="player-list">
+                    <div class="player-item">
+                        <div class="player-circle player-1">1</div>
+                        <div class="player-info">
+                            <div class="player-name">MAG</div>
+                            <div class="player-role">Менеджер</div>
+                        </div>
+                        <div class="player-status">✓ Готов</div>
+                    </div>
+                    <div class="player-item">
+                        <div class="player-circle player-2">2</div>
+                        <div class="player-info">
+                            <div class="player-name">Игрок 2</div>
+                            <div class="player-role">Инвестор</div>
+                        </div>
+                        <div class="player-status">✓ Готов</div>
+                    </div>
+                    <div class="player-item">
+                        <div class="player-circle player-3">3</div>
+                        <div class="player-info">
+                            <div class="player-name">Игрок 3</div>
+                            <div class="player-role">Финансист</div>
+                        </div>
+                        <div class="player-status">✓ Готов</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Текущий игрок</div>
+                <div style="text-align: center; color: #94a3b8; font-size: 12px;">
+                    Выберите игрока
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🎮 Денежный поток загружается...');
+
+        // Создание внешнего трека (52 клетки)
+        function createOuterTrack() {
+            const outerTrack = document.getElementById('outerTrack');
+            outerTrack.innerHTML = '';
+            
+            const cellSize = 40;
+            const boardSize = 800;
+            const trackWidth = boardSize - 100; // Отступы от краев
+            
+            for (let i = 1; i <= 52; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'outer-cell cell-green';
+                cell.dataset.cell = i;
+                cell.onclick = () => console.log(`Внешняя клетка ${i}`);
+                
+                let x, y;
+                
+                if (i <= 13) { // Верхняя сторона
+                    x = 50 + (i - 1) * (trackWidth / 13);
+                    y = 50;
+                } else if (i <= 26) { // Правая сторона
+                    x = 50 + trackWidth;
+                    y = 50 + (i - 14) * (trackWidth / 13);
+                } else if (i <= 39) { // Нижняя сторона
+                    x = 50 + trackWidth - (i - 27) * (trackWidth / 13);
+                    y = 50 + trackWidth;
+                } else { // Левая сторона
+                    x = 50;
+                    y = 50 + trackWidth - (i - 40) * (trackWidth / 13);
+                }
+                
+                cell.style.left = `${x}px`;
+                cell.style.top = `${y}px`;
+                
+                // Добавляем иконки
+                const icons = ['G', '🏭', '📈', '🏠', '🚗', '📷', '🔧', '❤️', '$', '💼', '📊', '🏢', '💰'];
+                cell.innerHTML = icons[(i - 1) % icons.length];
+                
+                outerTrack.appendChild(cell);
+            }
+        }
+
+        // Создание внутреннего спирального трека (24 клетки)
+        function createInnerTrack() {
+            const innerTrack = document.getElementById('innerTrack');
+            innerTrack.innerHTML = '';
+            
+            const colors = ['cell-blue', 'cell-pink', 'cell-orange', 'cell-yellow', 'cell-green', 'cell-purple', 'cell-red', 'cell-gray'];
+            const icons = ['G', '$', '❤️', '👤', '🏠', '💼', '🚗', '📷', '🔧', '🏭', '📈', '💰'];
+            
+            for (let i = 1; i <= 24; i++) {
+                const cell = document.createElement('div');
+                cell.className = `inner-cell ${colors[(i - 1) % colors.length]}`;
+                cell.dataset.cell = i;
+                cell.onclick = () => console.log(`Внутренняя клетка ${i}`);
+                
+                // Спиральное расположение
+                const angle = (i - 1) * (360 / 24) * (Math.PI / 180);
+                const radius = 120 + (i - 1) * 5; // Увеличиваем радиус для спирали
+                
+                const x = 200 + radius * Math.cos(angle);
+                const y = 200 + radius * Math.sin(angle);
+                
+                cell.style.left = `${x}px`;
+                cell.style.top = `${y}px`;
+                
+                cell.innerHTML = icons[(i - 1) % icons.length];
+                
+                innerTrack.appendChild(cell);
+            }
+        }
+
+        // Бросок кубика
+        function rollDice() {
+            const dice = document.getElementById('dice');
+            const result = Math.floor(Math.random() * 6) + 1;
+            dice.textContent = result;
+            dice.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                dice.style.transform = 'scale(1)';
+            }, 200);
+            console.log(`🎲 Выпало: ${result}`);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎮 Денежный поток инициализируется...');
+            
+            try {
+                createOuterTrack();
+                createInnerTrack();
+                
+                const rollDiceBtn = document.getElementById('rollDiceBtn');
+                if (rollDiceBtn) {
+                    rollDiceBtn.addEventListener('click', rollDice);
+                }
+                
+                console.log('✅ Денежный поток успешно загружен');
+            } catch (error) {
+                console.error('❌ Ошибка инициализации:', error);
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,414 @@
+/**
+ * Стили уведомлений для игры "Энергия денег"
+ */
+
+/* Контейнер уведомлений */
+.notifications {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+/* Уведомление */
+.notification {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    cursor: pointer;
+    border-left: 4px solid var(--gray-300);
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification.hide {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+/* Содержимое уведомления */
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    position: relative;
+}
+
+/* Иконка уведомления */
+.notification-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+/* Сообщение уведомления */
+.notification-message {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-700);
+    line-height: 1.4;
+}
+
+/* Кнопка закрытия */
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.notification-close:hover {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+/* Типы уведомлений */
+.notification-success {
+    border-left-color: var(--success-color);
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.notification-success .notification-icon {
+    color: var(--success-color);
+}
+
+.notification-error {
+    border-left-color: var(--error-color);
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.notification-error .notification-icon {
+    color: var(--error-color);
+}
+
+.notification-warning {
+    border-left-color: var(--warning-color);
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.notification-warning .notification-icon {
+    color: var(--warning-color);
+}
+
+.notification-info {
+    border-left-color: var(--info-color);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.notification-info .notification-icon {
+    color: var(--info-color);
+}
+
+.notification-money {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.notification-money .notification-icon {
+    color: #f59e0b;
+}
+
+.notification-movement {
+    border-left-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.notification-movement .notification-icon {
+    color: #3b82f6;
+}
+
+.notification-card {
+    border-left-color: #8b5cf6;
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+}
+
+.notification-card .notification-icon {
+    color: #8b5cf6;
+}
+
+.notification-bankruptcy {
+    border-left-color: var(--error-color);
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.notification-bankruptcy .notification-icon {
+    color: var(--error-color);
+    animation: pulse 1s infinite;
+}
+
+/* Анимации */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+/* Прогресс-бар для уведомлений с таймером */
+.notification.with-timer::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    animation: countdown linear;
+}
+
+.notification-success.with-timer::after {
+    background: var(--success-color);
+}
+
+.notification-error.with-timer::after {
+    background: var(--error-color);
+}
+
+.notification-warning.with-timer::after {
+    background: var(--warning-color);
+}
+
+.notification-info.with-timer::after {
+    background: var(--info-color);
+}
+
+@keyframes countdown {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .notifications {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .notification {
+        transform: translateY(-100%);
+    }
+    
+    .notification.show {
+        transform: translateY(0);
+    }
+    
+    .notification.hide {
+        transform: translateY(-100%);
+    }
+    
+    .notification-content {
+        padding: 12px;
+        gap: 10px;
+    }
+    
+    .notification-message {
+        font-size: 13px;
+    }
+    
+    .notification-icon {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notifications {
+        top: 5px;
+        right: 5px;
+        left: 5px;
+        gap: 8px;
+    }
+    
+    .notification-content {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .notification-message {
+        font-size: 12px;
+    }
+    
+    .notification-icon {
+        font-size: 16px;
+    }
+    
+    .notification-close {
+        font-size: 16px;
+        padding: 2px;
+    }
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+    .notification {
+        background: var(--gray-800);
+        border-left-color: var(--gray-600);
+    }
+    
+    .notification-message {
+        color: var(--gray-200);
+    }
+    
+    .notification-close {
+        color: var(--gray-400);
+    }
+    
+    .notification-close:hover {
+        background: var(--gray-700);
+        color: var(--gray-200);
+    }
+    
+    .notification-success {
+        background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+    }
+    
+    .notification-error {
+        background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+    }
+    
+    .notification-warning {
+        background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+    }
+    
+    .notification-info {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    }
+    
+    .notification-money {
+        background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+    }
+    
+    .notification-movement {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    }
+    
+    .notification-card {
+        background: linear-gradient(135deg, #581c87 0%, #6b21a8 100%);
+    }
+    
+    .notification-bankruptcy {
+        background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+    }
+}
+
+/* Анимации для специальных эффектов */
+.notification-bankruptcy .notification-icon {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.notification-success .notification-icon {
+    animation: bounce 0.6s ease-in-out;
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+        transform: translate3d(0, 0, 0);
+    }
+    40%, 43% {
+        transform: translate3d(0, -5px, 0);
+    }
+    70% {
+        transform: translate3d(0, -2px, 0);
+    }
+    90% {
+        transform: translate3d(0, -1px, 0);
+    }
+}
+
+/* Стек уведомлений */
+.notifications.stacked .notification {
+    margin-bottom: -10px;
+    transform: translateX(100%) scale(0.95);
+}
+
+.notifications.stacked .notification:nth-child(1) {
+    transform: translateX(0) scale(1);
+    z-index: 5;
+}
+
+.notifications.stacked .notification:nth-child(2) {
+    transform: translateX(0) scale(0.95);
+    z-index: 4;
+}
+
+.notifications.stacked .notification:nth-child(3) {
+    transform: translateX(0) scale(0.9);
+    z-index: 3;
+}
+
+.notifications.stacked .notification:nth-child(4) {
+    transform: translateX(0) scale(0.85);
+    z-index: 2;
+}
+
+.notifications.stacked .notification:nth-child(5) {
+    transform: translateX(0) scale(0.8);
+    z-index: 1;
+}

@@ -1,0 +1,499 @@
+/**
+ * Стили игровой доски "Энергия денег"
+ */
+
+/* Игровая доска */
+.game-board {
+    position: relative;
+    width: 800px;
+    height: 800px;
+    margin: 2rem auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+}
+
+/* Внутренний трек */
+.board-inner-track {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 2px;
+    padding: 10px;
+}
+
+/* Внешний трек */
+.board-outer-track {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 760px;
+    height: 760px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 2px;
+    padding: 15px;
+}
+
+/* Центральная область */
+.board-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    z-index: 10;
+}
+
+.game-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.game-status {
+    font-size: 0.875rem;
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+/* Кубики */
+.dice-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dice {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.dice:hover {
+    transform: scale(1.1);
+}
+
+.dice-total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--warning-color);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Кнопки действий */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 200px;
+}
+
+.action-buttons .btn {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Клетки доски */
+.board-cell {
+    background: white;
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    min-height: 60px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.board-cell:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+    z-index: 5;
+}
+
+.board-cell.active {
+    background: var(--warning-color);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: var(--shadow-lg);
+    z-index: 5;
+}
+
+.board-cell.payday {
+    background: var(--success-color);
+    color: white;
+}
+
+.board-cell.charity {
+    background: var(--info-color);
+    color: white;
+}
+
+.board-cell.opportunity {
+    background: var(--primary-color);
+    color: white;
+}
+
+.board-cell.expense {
+    background: var(--error-color);
+    color: white;
+}
+
+/* Содержимое клетки */
+.cell-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.cell-number {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.7;
+}
+
+.cell-name {
+    font-size: 0.625rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.cell-amount {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.cell-icon {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Игроки на доске */
+.player-token {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: var(--shadow);
+    z-index: 10;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: white;
+}
+
+.player-token:hover {
+    transform: scale(1.2);
+    z-index: 15;
+}
+
+.player-token.current {
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Анимация движения */
+@keyframes moveToken {
+    0% {
+        transform: translate(var(--start-x), var(--start-y));
+    }
+    100% {
+        transform: translate(var(--end-x), var(--end-y));
+    }
+}
+
+.player-token.moving {
+    animation: moveToken 1s ease-in-out;
+}
+
+/* Анимация броска кубиков */
+@keyframes diceRoll {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    25% {
+        transform: rotate(90deg) scale(1.1);
+    }
+    50% {
+        transform: rotate(180deg) scale(0.9);
+    }
+    75% {
+        transform: rotate(270deg) scale(1.1);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+.dice.rolling {
+    animation: diceRoll 0.6s ease-in-out;
+}
+
+/* Банковский интерфейс */
+.bank-interface {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 200px;
+    z-index: 1000;
+}
+
+.bank-balance,
+.bank-income,
+.bank-expenses {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+}
+
+.bank-balance {
+    background: var(--gray-50);
+}
+
+.bank-income {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.bank-expenses {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+}
+
+.balance-amount,
+.income-amount,
+.expenses-amount {
+    font-weight: 700;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .game-board {
+        width: 600px;
+        height: 600px;
+    }
+    
+    .board-inner-track {
+        top: 40px;
+        left: 40px;
+        width: 520px;
+        height: 520px;
+    }
+    
+    .board-outer-track {
+        top: 15px;
+        left: 15px;
+        width: 570px;
+        height: 570px;
+    }
+    
+    .board-center {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .game-title {
+        font-size: 1.25rem;
+    }
+    
+    .dice {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .dice-total {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .game-board {
+        width: 400px;
+        height: 400px;
+        margin: 1rem auto;
+    }
+    
+    .board-inner-track {
+        top: 25px;
+        left: 25px;
+        width: 350px;
+        height: 350px;
+    }
+    
+    .board-outer-track {
+        top: 10px;
+        left: 10px;
+        width: 380px;
+        height: 380px;
+    }
+    
+    .board-center {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .game-title {
+        font-size: 1rem;
+    }
+    
+    .game-status {
+        font-size: 0.75rem;
+    }
+    
+    .dice {
+        width: 30px;
+        height: 30px;
+        font-size: 0.875rem;
+    }
+    
+    .dice-total {
+        font-size: 1rem;
+    }
+    
+    .action-buttons {
+        max-width: 150px;
+    }
+    
+    .action-buttons .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+    
+    .bank-interface {
+        top: 10px;
+        right: 10px;
+        min-width: 150px;
+        padding: 0.75rem;
+    }
+    
+    .bank-balance,
+    .bank-income,
+    .bank-expenses {
+        font-size: 0.75rem;
+        padding: 0.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-board {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .board-inner-track {
+        top: 20px;
+        left: 20px;
+        width: 260px;
+        height: 260px;
+    }
+    
+    .board-outer-track {
+        top: 8px;
+        left: 8px;
+        width: 284px;
+        height: 284px;
+    }
+    
+    .board-center {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .game-title {
+        font-size: 0.875rem;
+    }
+    
+    .game-status {
+        font-size: 0.625rem;
+    }
+    
+    .dice {
+        width: 25px;
+        height: 25px;
+        font-size: 0.75rem;
+    }
+    
+    .dice-total {
+        font-size: 0.875rem;
+    }
+    
+    .dice-container {
+        gap: 0.5rem;
+    }
+    
+    .action-buttons {
+        max-width: 120px;
+    }
+    
+    .action-buttons .btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.625rem;
+    }
+    
+    .bank-interface {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        top: auto;
+        min-width: 120px;
+        padding: 0.5rem;
+    }
+}

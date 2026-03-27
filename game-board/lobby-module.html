@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лобби - Game Board v2.6</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/components/lobby.css">
+</head>
+<body>
+    <div class="lobby-container">
+        <main class="main-content">
+            <header class="lobby-header">
+                <h1 class="lobby-title">🎮 ЛОББИ</h1>
+                <p class="lobby-subtitle">Выберите комнату или создайте новую игру</p>
+            </header>
+
+            <div class="lobby-actions">
+                <button class="btn btn-primary create-room-btn">
+                    🏠 Создать комнату
+                </button>
+                <button class="btn btn-success quick-join-btn">
+                    ⚡ Быстрый вход
+                </button>
+                <button class="btn btn-secondary refresh-btn">
+                    🔄 Обновить
+                </button>
+            </div>
+
+            <section class="rooms-section">
+                <div class="rooms-list" id="roomsList">
+                    <!-- Комнаты будут загружены динамически -->
+                </div>
+            </section>
+        </main>
+
+        <aside class="sidebar">
+            <div class="panel">
+                <h3>👤 Профиль</h3>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-details">
+                        <h3 id="userName">Пользователь</h3>
+                        <p>Онлайн</p>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="userBalance">$0</div>
+                        <div class="stat-label">Баланс</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalGames">0</div>
+                        <div class="stat-label">Игр</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalWins">0</div>
+                        <div class="stat-label">Побед</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="userLevel">1</div>
+                        <div class="stat-label">Уровень</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>📊 Статистика</h3>
+                <div class="stat-item">
+                    <div class="stat-value" id="onlinePlayers">1</div>
+                    <div class="stat-label">Игроков онлайн</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>🧪 Тестовые страницы</h3>
+                <div style="display: grid; gap: 10px; grid-template-columns: 1fr 1fr;">
+                    <button class="btn btn-secondary" onclick="window.open('/', '_blank')" style="font-size: 12px;">
+                        🏠 Главная
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/auth', '_blank')" style="font-size: 12px;">
+                        🔐 Авторизация
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/lobby', '_blank')" style="font-size: 12px;">
+                        🎮 Лобби (старое)
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/game', '_blank')" style="font-size: 12px;">
+                        🎯 Игра
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/test', '_blank')" style="font-size: 12px;">
+                        🔬 Тест
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/docs', '_blank')" style="font-size: 12px;">
+                        📚 Документы
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>🔧 API & Debug</h3>
+                <div style="display: grid; gap: 8px; grid-template-columns: 1fr;">
+                    <button class="btn btn-secondary" onclick="window.open('/api/health', '_blank')" style="font-size: 11px;">
+                        🏥 API Health
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/api/rooms', '_blank')" style="font-size: 11px;">
+                        🏠 API Rooms
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/api/user/profile', '_blank')" style="font-size: 11px;">
+                        👤 API Profile
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/api/user/stats', '_blank')" style="font-size: 11px;">
+                        📊 API Stats
+                    </button>
+                    <button class="btn btn-secondary" onclick="testWebSocket()" style="font-size: 11px;">
+                        🔌 WebSocket Test
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>🌐 Ссылки</h3>
+                <div style="display: grid; gap: 8px; grid-template-columns: 1fr;">
+                    <button class="btn btn-secondary" onclick="window.open('https://em1-production.up.railway.app/lobby-module', '_blank')" style="font-size: 11px;">
+                        🚀 Railway (Продакшн)
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('http://localhost:3000/lobby-module', '_blank')" style="font-size: 11px;">
+                        💻 Localhost
+                    </button>
+                    <button class="btn btn-secondary" onclick="copyCurrentUrl()" style="font-size: 11px;">
+                        📋 Скопировать URL
+                    </button>
+                    <button class="btn btn-secondary" onclick="showSystemInfo()" style="font-size: 11px;">
+                        ℹ️ Информация о системе
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <button class="btn btn-secondary logout-btn" style="width: 100%;">
+                    🚪 Выйти
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Модальное окно создания комнаты -->
+    <div class="modal" id="createRoomModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Создать комнату</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="createRoomForm">
+                <div class="form-group">
+                    <label for="roomName">Название комнаты</label>
+                    <input type="text" id="roomName" required placeholder="Введите название комнаты">
+                </div>
+                <div class="form-group">
+                    <label for="maxPlayers">Максимум игроков</label>
+                    <select id="maxPlayers">
+                        <option value="2">2 игрока</option>
+                        <option value="3">3 игрока</option>
+                        <option value="4" selected>4 игрока</option>
+                        <option value="5">5 игроков</option>
+                        <option value="6">6 игроков</option>
+                        <option value="7">7 игроков</option>
+                        <option value="8">8 игроков</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="turnTime">Время на ход (минуты)</label>
+                    <select id="turnTime">
+                        <option value="1">1 минута</option>
+                        <option value="2">2 минуты</option>
+                        <option value="3" selected>3 минуты</option>
+                        <option value="4">4 минуты</option>
+                        <option value="5">5 минут</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="assignProfessions"> Автоматически назначать профессии
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="roomPassword">Пароль комнаты (необязательно)</label>
+                    <input type="password" id="roomPassword" placeholder="Введите пароль">
+                </div>
+                <div class="form-group">
+                    <label>Выберите профессию</label>
+                    <div class="profession-cards">
+                        <div class="profession-card" data-profession="entrepreneur">
+                            <div class="profession-icon">💼</div>
+                            <div class="profession-name">Предприниматель</div>
+                        </div>
+                        <div class="profession-card" data-profession="employee">
+                            <div class="profession-icon">👔</div>
+                            <div class="profession-name">Сотрудник</div>
+                        </div>
+                        <div class="profession-card" data-profession="investor">
+                            <div class="profession-icon">📈</div>
+                            <div class="profession-name">Инвестор</div>
+                        </div>
+                        <div class="profession-card" data-profession="freelancer">
+                            <div class="profession-icon">💻</div>
+                            <div class="profession-name">Фрилансер</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-message" id="createRoomError"></div>
+                <div class="loading" id="createRoomLoading">
+                    <div class="spinner"></div>
+                    <span>Создание комнаты...</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа в комнату -->
+    <div class="modal" id="joinRoomModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Вход в комнату</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="joinRoomPassword">Пароль комнаты</label>
+                <input type="password" id="joinRoomPassword" placeholder="Введите пароль (если требуется)">
+            </div>
+            <div class="error-message" id="joinRoomError"></div>
+            <div class="loading" id="joinRoomLoading">
+                <div class="spinner"></div>
+                <span>Подключение...</span>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary">Отмена</button>
+                <button type="button" class="btn btn-primary">Войти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO для тестирования -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Подключение модуля -->
+    <script type="module" src="/game/assets/js/modules/lobby/index.js"></script>
+    
+    <!-- Дополнительные функции для тестирования -->
+    <script>
+        function testWebSocket() {
+            try {
+                const socket = io({
+                    transports: ['polling', 'websocket'],
+                    timeout: 5000,
+                    forceNew: true
+                });
+                
+                socket.on('connect', () => {
+                    alert('✅ WebSocket подключен успешно! Socket ID: ' + socket.id);
+                    socket.disconnect();
+                });
+                
+                socket.on('connect_error', (error) => {
+                    alert('❌ Ошибка подключения WebSocket: ' + error.message);
+                });
+                
+                socket.on('disconnect', () => {
+                    console.log('WebSocket отключен');
+                });
+                
+            } catch (error) {
+                alert('❌ Ошибка создания WebSocket: ' + error.message);
+            }
+        }
+        
+        function copyCurrentUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('✅ URL скопирован в буфер обмена: ' + window.location.href);
+            }).catch(() => {
+                alert('❌ Не удалось скопировать URL');
+            });
+        }
+        
+        function showSystemInfo() {
+            const info = `
+🎮 Game Board v2.6
+🌐 URL: ${window.location.href}
+🕐 Время: ${new Date().toLocaleString('ru-RU')}
+📱 User Agent: ${navigator.userAgent}
+🔌 WebSocket: ${typeof io !== 'undefined' ? 'Доступен' : 'Недоступен'}
+💾 LocalStorage: ${typeof localStorage !== 'undefined' ? 'Доступен' : 'Недоступен'}
+            `;
+            alert(info);
+        }
+        
+        // Добавляем информацию о версии в консоль
+        console.log('🎮 LobbyModule v2.6 - Тестовые страницы доступны');
+        console.log('📱 Доступные маршруты:', [
+            '/', '/auth', '/lobby', '/game', '/lobby-module', '/test', '/docs'
+        ]);
+        console.log('🔌 API эндпоинты:', [
+            '/api/health', '/api/rooms', '/api/user/profile', '/api/user/stats'
+        ]);
+        console.log('🌐 Ссылки:', {
+            railway: 'https://em1-production.up.railway.app/lobby-module',
+            localhost: 'http://localhost:3000/lobby-module'
+        });
+    </script>
+</body>
+</html>

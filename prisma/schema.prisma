@@ -1,0 +1,554 @@
+// Полный перенос Vital + данные Plazma (совместимость: опциональные поля Product/Category, модели Plazma)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+// Region enum is deprecated in favor of Region model, but kept for compatibility if needed.
+// User.selectedRegion is now a String.
+
+model Region {
+  id        String   @id @default(uuid())
+  code      String   @unique // e.g. RUSSIA, BALI, DUBAI
+  name      String   // e.g. Россия, Бали, Дубай
+  currency  String   @default("RUB") // RUB, IDR, AED
+  isActive  Boolean  @default(true)
+  isDefault Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PartnerProgramType {
+  DIRECT
+  MULTI_LEVEL
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum CertificateStatus {
+  ACTIVE
+  USED
+  EXPIRED
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id              String            @id @default(uuid())
+  telegramId      String            @unique
+  isBlocked       Boolean           @default(false)
+  firstName       String?
+  lastName        String?
+  username        String?
+  languageCode    String?
+  phone           String?
+  photoUrl        String?
+  selectedRegion  String?           @default("RUSSIA")
+  city            String?
+  deliveryAddress String?
+  balance         Float             @default(0)
+  cartItems       CartItem[]
+  histories       UserHistory[]
+  partner         PartnerProfile?
+  orders          OrderRequest[]
+  giftCertificates GiftCertificate[]
+  giftCertificatesSent GiftCertificate[] @relation("SentGifts")
+  referrals       PartnerReferral[] @relation("UserReferrals")
+  payments        Payment[]
+  balanceTopups   BalanceTopUpRequest[]
+  broadcastTargets BroadcastTarget[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([createdAt])
+}
+
+model BalanceTopUpRequest {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   
+  amountRub  Float?
+  receiptUrl String
+  status     String   @default("PENDING")
+  adminNote  String?
+  isForCertificate Boolean @default(false)
+  certificateAmountRub Float?
+  certificateImageUrl  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}
+
+model UserHistory {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   
+  action    String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([action])
+}
+
+model Category {
+  id                String    @id @default(uuid())
+  name              String
+  slug              String    @unique
+  description       String?
+  imageUrl          String?
+  isVisibleInWebapp Boolean?  @default(true)
+  isActive          Boolean   @default(true)
+  sortOrder         Int       @default(0)
+  products          Product[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([sortOrder])
+}
+
+model Product {
+  id                String     @id @default(uuid())
+  title             String
+  summary           String
+  description       String?
+  instruction       String?
+  imageUrl          String?
+  price             Float
+  purchasePrice     Float?
+  sku               String?
+  stock             Int        @default(999)
+  lowStockThreshold Int?       @default(3)
+  isActive          Boolean    @default(true)
+  availableInRussia Boolean   @default(true)
+  availableInBali   Boolean   @default(true)
+  category          Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId        String     
+  sortOrder         Int        @default(0)
+  cartItems         CartItem[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@index([isActive, categoryId])
+  @@index([createdAt])
+  @@index([sku])
+  @@index([stock])
+  @@index([sortOrder])
+
+  promotions        Promotion[]
+}
+
+model CertificateType {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  valueRub    Int
+  priceRub    Int
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  certificates GiftCertificate[]
+
+  @@index([isActive, sortOrder])
+}
+
+model CertificateTemplate {
+  id          String   @id @default(uuid())
+  imageUrl    String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model GiftCertificate {
+  id           String           @id @default(uuid())
+  code         String           @unique
+  type         CertificateType? @relation(fields: [typeId], references: [id])
+  typeId       String?          
+  user         User?            @relation(fields: [userId], references: [id])
+  userId       String?          
+  fromUser     User?            @relation("SentGifts", fields: [fromUserId], references: [id])
+  fromUserId   String?
+  giftToken    String?          @unique
+  initialPz    Float
+  remainingPz  Float
+  status       String           @default("ACTIVE")
+  imageUrl     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@index([giftToken])
+}
+
+model Specialist {
+  id            String   @id @default(uuid())
+  name          String
+  specialty     String
+  categoryId    String?  
+  specialtyId   String?  
+  category      SpecialistCategory? @relation(fields: [categoryId], references: [id])
+  specialtyRef  SpecialistSpecialty? @relation(fields: [specialtyId], references: [id])
+  photoUrl      String?
+  profile       String?
+  about         String?
+  services      SpecialistService[]
+  messengerUrl  String?
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive, specialty])
+  @@index([sortOrder, createdAt])
+  @@index([categoryId, specialtyId])
+}
+
+model SpecialistCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  specialties SpecialistSpecialty[]
+  specialists Specialist[]
+
+  @@index([isActive, sortOrder])
+}
+
+model SpecialistSpecialty {
+  id          String   @id @default(uuid())
+  name        String
+  category    SpecialistCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId  String   
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  specialists Specialist[]
+
+  @@unique([categoryId, name])
+  @@index([isActive, categoryId, sortOrder])
+}
+
+model SpecialistService {
+  id           String   @id @default(uuid())
+  specialist   Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  specialistId String   
+  title        String
+  description  String?
+  format       String?
+  durationMin  Int?
+  detailsUrl   String?
+  priceRub     Int
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([specialistId, isActive, sortOrder])
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String   
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model OrderRequest {
+  id        String   @id @default(uuid())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?  
+  contact   String?
+  message   String
+  itemsJson Json
+  status    OrderStatus   @default(NEW)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model PartnerProfile {
+  id             String               @id @default(uuid())
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String               @unique 
+  isActive       Boolean              @default(false)
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  activationType String?
+  programType    PartnerProgramType   @default(DIRECT)
+  referralCode       String               @unique
+  referralDirectQrUrl String?             // URL QR-кода для Direct (Cloudinary)
+  referralMultiQrUrl  String?             // URL QR-кода для Multi-level (Cloudinary)
+  balance        Float                @default(0)
+  bonus          Float                @default(0)
+  isSuperPartner Boolean              @default(false)
+  totalPartners  Int                  @default(0)
+  directPartners Int                  @default(0)
+  multiPartners  Int                  @default(0)
+  referrals      PartnerReferral[]
+  transactions   PartnerTransaction[]
+  activationHistory PartnerActivationHistory[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model PartnerReferral {
+  id           String             @id @default(uuid())
+  profile      PartnerProfile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId    String             
+  referredId   String?            
+  referred     User?              @relation("UserReferrals", fields: [referredId], references: [id])
+  contact      String?
+  level        Int
+  referralType PartnerProgramType     @default(DIRECT)
+  createdAt    DateTime           @default(now())
+
+  @@index([profileId])
+  @@index([referredId])
+}
+
+model PartnerTransaction {
+  id          String          @id @default(uuid())
+  profile     PartnerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String          
+  amount      Float
+  type        TransactionType
+  description String
+  createdAt   DateTime        @default(now())
+
+  @@index([profileId, createdAt])
+}
+
+model PartnerActivationHistory {
+  id              String          @id @default(uuid())
+  profile         PartnerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId       String          
+  action          String
+  activationType  String?
+  reason          String?
+  expiresAt       DateTime?
+  adminId         String?
+  createdAt       DateTime        @default(now())
+
+  @@index([profileId])
+  @@index([createdAt])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  name      String
+  photoUrl  String?
+  content   String
+  link      String?
+  isPinned  Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AudioFile {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  fileId      String
+  duration    Int?
+  fileSize    Int?
+  mimeType    String?
+  isActive    Boolean  @default(true)
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MediaFile {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  url         String
+  type        String
+  fileSize    Int?
+  mimeType    String?
+  isActive    Boolean  @default(true)
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BotContent {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  title       String
+  content     String
+  description String?
+  category    String?
+  isActive    Boolean  @default(true)
+  language    String   @default("ru")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MessageTemplate {
+  id        String   @id @default(uuid())
+  name      String
+  subject   String
+  text      String
+  photoUrl  String?
+  buttons   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id         String        @id @default(uuid())
+  userId     String        
+  user       User          @relation(fields: [userId], references: [id])
+  orderId    String        @unique
+  invoiceId  String        @unique
+  amount     Float
+  currency   String        @default("RUB")
+  status     PaymentStatus        @default(PENDING)
+  paymentUrl String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model Settings {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Promotion {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  buttonText  String?
+  buttonLink  String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Broadcast {
+  id          String    @id @default(uuid())
+  title       String    // Internal title
+  message     String    // Text content
+  photoUrl    String?   // Optional image
+  buttonText  String?   // Optional button
+  buttonUrl   String?
+  targetType  String    // ALL, BUYERS, NON_BUYERS
+  
+  // For forwarded/copied messages
+  sourceMessageId Int?
+  sourceChatId    String?
+  
+  status      String    @default("DRAFT") // DRAFT, PROCESSING, COMPLETED, PAUSED, FAILED
+  
+  totalRecipients Int      @default(0)
+  sentCount       Int      @default(0)
+  failedCount     Int      @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  targets     BroadcastTarget[]
+}
+
+model BroadcastTarget {
+  id          String    @id @default(uuid())
+  broadcast   Broadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  broadcastId String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  status      String    @default("PENDING") // PENDING, SENT, FAILED
+  error       String?
+  sentAt      DateTime?
+  
+  @@index([broadcastId, status])
+  @@index([userId])
+}
+
+model B2BPartner {
+  id                  String   @id @default(uuid())
+  name                String                   // «Форум», «Конференция XYZ»
+  linkCode            String   @unique          // уникальный код для ссылки (b2b_XXXX)
+  certificateValueRub Int                       // номинал сертификата в рублях
+  imageUrl            String?                    // фото / логотип партнёра (Cloudinary)
+  maxCertificates     Int      @default(0)      // лимит выдачи (0 = без лимита)
+  issuedCount         Int      @default(0)      // сколько уже выдано
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  issuedCertificates  B2BCertificateIssue[]
+
+  @@index([isActive])
+}
+
+model B2BCertificateIssue {
+  id            String     @id @default(uuid())
+  partner       B2BPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  partnerId     String
+  userId        String
+  certificateId String?    // ссылка на GiftCertificate.id
+  createdAt     DateTime   @default(now())
+
+  @@unique([partnerId, userId])
+  @@index([partnerId])
+  @@index([userId])
+}

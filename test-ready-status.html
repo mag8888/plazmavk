@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест статуса готовности</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .player-info {
+            flex: 1;
+        }
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .player-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-ready {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .status-waiting {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        .test-buttons {
+            margin: 20px 0;
+        }
+        .test-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .test-btn:hover {
+            background: #4338ca;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Тест статуса готовности игроков</h1>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="addPlayer()">Добавить игрока</button>
+            <button class="test-btn" onclick="toggleReady(0)">Переключить готовность</button>
+            <button class="test-btn" onclick="clearLog()">Очистить лог</button>
+        </div>
+
+        <div id="playersList"></div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        let players = [
+            { id: 0, name: 'Тестовый игрок', isReady: false }
+        ];
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function addPlayer() {
+            const newId = players.length;
+            players.push({
+                id: newId,
+                name: `Игрок ${newId + 1}`,
+                isReady: false
+            });
+            renderPlayers();
+            log(`Добавлен игрок: ${players[newId].name}`);
+        }
+
+        function toggleReady(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (player) {
+                player.isReady = !player.isReady;
+                renderPlayers();
+                log(`Игрок ${player.name} готовность: ${player.isReady ? 'ГОТОВ' : 'НЕ ГОТОВ'}`);
+            }
+        }
+
+        function renderPlayers() {
+            const container = document.getElementById('playersList');
+            container.innerHTML = '';
+
+            players.forEach(player => {
+                const item = document.createElement('div');
+                item.className = 'player-item';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'player-avatar';
+                avatar.textContent = player.name.charAt(0).toUpperCase();
+
+                const info = document.createElement('div');
+                info.className = 'player-info';
+
+                const name = document.createElement('div');
+                name.className = 'player-name';
+                name.textContent = player.name;
+                info.appendChild(name);
+
+                const status = document.createElement('div');
+                status.className = 'player-status';
+                
+                if (player.isReady) {
+                    status.textContent = 'Готов';
+                    status.classList.add('status-ready');
+                    status.classList.remove('status-waiting');
+                    // Инлайн стили для тестирования
+                    status.style.background = 'rgba(16, 185, 129, 0.2)';
+                    status.style.color = '#10b981';
+                    status.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    log(`✅ Рендер: ${player.name} - статус "Готов" с классом status-ready`);
+                } else {
+                    status.textContent = 'Ожидает';
+                    status.classList.add('status-waiting');
+                    status.classList.remove('status-ready');
+                    log(`⏳ Рендер: ${player.name} - статус "Ожидает" с классом status-waiting`);
+                }
+
+                item.appendChild(avatar);
+                item.appendChild(info);
+                item.appendChild(status);
+                container.appendChild(item);
+            });
+        }
+
+        // Инициализация
+        log('Тестовая страница загружена');
+        renderPlayers();
+    </script>
+</body>
+</html>

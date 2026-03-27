@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест интеграции систем карточек</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .card {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест интеграции систем карточек</h1>
+    
+    <div class="test-section">
+        <h2>📊 Статус загрузки модулей</h2>
+        <div id="moduleStatus"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>💼 Тест карт профессий</h2>
+        <div id="professionTest"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🃏 Тест карт сделок</h2>
+        <div id="cardsTest"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎯 Тест данных игроков</h2>
+        <div id="playersTest"></div>
+    </div>
+
+    <!-- Загружаем модули -->
+    <script src="assets/js/modules/game/ProfessionManager.js"></script>
+    <script src="assets/js/modules/game/ProfessionUI.js"></script>
+    <script src="assets/js/modules/game/CardManager.js"></script>
+    <script src="assets/js/modules/game/CardUI.js"></script>
+    <script src="game-board/professions-data.js"></script>
+    
+    <script>
+        console.log('🧪 Starting integration test...');
+        
+        // Тест загрузки модулей
+        function testModuleLoading() {
+            const statusDiv = document.getElementById('moduleStatus');
+            const modules = [
+                { name: 'ProfessionManager', obj: window.ProfessionManager },
+                { name: 'ProfessionUI', obj: window.ProfessionUI },
+                { name: 'CardManager', obj: window.CardManager },
+                { name: 'CardUI', obj: window.CardUI },
+                { name: 'PROFESSIONS data', obj: window.PROFESSIONS }
+            ];
+            
+            let html = '';
+            modules.forEach(module => {
+                const status = module.obj ? 'success' : 'error';
+                const icon = module.obj ? '✅' : '❌';
+                html += `<div class="${status}">${icon} ${module.name}: ${module.obj ? 'Загружен' : 'Не найден'}</div>`;
+            });
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        // Тест карт профессий
+        function testProfessions() {
+            const testDiv = document.getElementById('professionTest');
+            
+            if (window.ProfessionManager && window.PROFESSIONS) {
+                try {
+                    const manager = new ProfessionManager();
+                    const professions = manager.getAllProfessions();
+                    
+                    let html = `<div class="success">✅ ProfessionManager: ${professions.length} профессий загружено</div>`;
+                    html += `<div class="success">✅ PROFESSIONS data: ${window.PROFESSIONS.length} профессий в window</div>`;
+                    
+                    // Показываем первые 3 профессии
+                    html += '<div class="card-grid">';
+                    professions.slice(0, 3).forEach(prof => {
+                        html += `
+                            <div class="card">
+                                <h4>${prof.icon} ${prof.name}</h4>
+                                <p>Зарплата: $${prof.salary.toLocaleString()}</p>
+                                <p>Расходы: $${prof.expenses.toLocaleString()}</p>
+                                <p>Денежный поток: $${prof.cashFlow.toLocaleString()}</p>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    
+                    testDiv.innerHTML = html;
+                } catch (error) {
+                    testDiv.innerHTML = `<div class="error">❌ Ошибка ProfessionManager: ${error.message}</div>`;
+                }
+            } else {
+                testDiv.innerHTML = '<div class="error">❌ ProfessionManager или PROFESSIONS не загружены</div>';
+            }
+        }
+        
+        // Тест карт сделок
+        function testCards() {
+            const testDiv = document.getElementById('cardsTest');
+            
+            if (window.CardManager) {
+                try {
+                    const manager = new CardManager();
+                    const stats = manager.getDeckStatistics();
+                    
+                    let html = '<div class="success">✅ CardManager: Инициализирован</div>';
+                    html += `<div class="success">📊 Статистика колод:</div>`;
+                    html += `<div class="card-grid">`;
+                    
+                    Object.entries(stats).forEach(([deck, count]) => {
+                        html += `
+                            <div class="card">
+                                <h4>${deck}</h4>
+                                <p>Карт: ${count}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    testDiv.innerHTML = html;
+                } catch (error) {
+                    testDiv.innerHTML = `<div class="error">❌ Ошибка CardManager: ${error.message}</div>`;
+                }
+            } else {
+                testDiv.innerHTML = '<div class="error">❌ CardManager не загружен</div>';
+            }
+        }
+        
+        // Тест данных игроков
+        function testPlayers() {
+            const testDiv = document.getElementById('playersTest');
+            
+            // Проверяем localStorage
+            const userId = localStorage.getItem('userId');
+            const user = localStorage.getItem('user');
+            
+            let html = '';
+            if (userId) {
+                html += `<div class="success">✅ User ID: ${userId}</div>`;
+            } else {
+                html += '<div class="warning">⚠️ User ID не найден в localStorage</div>';
+            }
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    html += `<div class="success">✅ User data: ${userData.username || 'Unknown'}</div>`;
+                } catch (e) {
+                    html += '<div class="error">❌ Ошибка парсинга user data</div>';
+                }
+            } else {
+                html += '<div class="warning">⚠️ User data не найден в localStorage</div>';
+            }
+            
+            testDiv.innerHTML = html;
+        }
+        
+        // Запускаем тесты
+        setTimeout(() => {
+            testModuleLoading();
+            testProfessions();
+            testCards();
+            testPlayers();
+            
+            console.log('🧪 Integration test completed');
+        }, 1000);
+    </script>
+</body>
+</html>
