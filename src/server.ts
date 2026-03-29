@@ -146,7 +146,15 @@ async function bootstrap() {
     app.use('/api/db-health', async (req, res) => {
       try {
         const sessionCount = await prisma.session.count();
-        res.json({ status: 'ok', sessionTableExists: true, count: sessionCount });
+        res.json({ 
+          status: 'ok', 
+          sessionTableExists: true, 
+          count: sessionCount,
+          dbUrl: process.env.DATABASE_URL?.substring(0, 30) + '...',
+          pgDb: process.env.PGDATABASE,
+          pgHost: process.env.PGHOST,
+          parsedDbName: (await import('pg-connection-string')).parse(process.env.DATABASE_URL || '').database
+        });
       } catch (err: any) {
         res.status(500).json({ status: 'error', sessionTableExists: false, error: err.message });
       }
@@ -154,10 +162,16 @@ async function bootstrap() {
 
     // Configure session middleware (PostgreSQL)
     // Dynamic import to avoid issues if module is missing during build
+    let sessionDbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL || '';
+    if (sessionDbUrl.includes('postgresql://') && !sessionDbUrl.startsWith('postgresql://')) {
+      console.warn('⚠️  Fixing malformed DATABASE_URL:', sessionDbUrl);
+      sessionDbUrl = sessionDbUrl.substring(sessionDbUrl.indexOf('postgresql://'));
+    }
+
     const pgSession = (await import('connect-pg-simple')).default(session);
     const pgPool = new (await import('pg')).Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false },
+      connectionString: sessionDbUrl,
+      ssl: sessionDbUrl?.includes('localhost') ? false : { rejectUnauthorized: false },
       max: 2 // Limit session connections to 2 to prevent exhaustion
     });
 
