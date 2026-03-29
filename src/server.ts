@@ -160,39 +160,46 @@ async function bootstrap() {
       }
     });
 
-    app.get('/api/sync-cleanup', async (req, res) => {
+    app.get('/api/migrate-from-old', async (req, res) => {
       try {
         const fetch = (await import('node-fetch')).default;
         
-        // Fetch source content
-        const sourceProductsRes = await fetch('https://plazma.up.railway.app/products');
-        const sourceProducts: any = await sourceProductsRes.json();
+        console.log('🔄 Fetching categories and products from old app for 100% sync...');
+        const catRes = await fetch('https://plazma.up.railway.app/api/categories');
+        const prodRes = await fetch('https://plazma.up.railway.app/products');
         
-        const sourceCategoriesRes = await fetch('https://plazma.up.railway.app/api/categories');
-        const sourceCategories: any = await sourceCategoriesRes.json();
+        if (!catRes.ok || !prodRes.ok) throw new Error('Failed to fetch from source');
+        const categories = (await catRes.json()) as any[];
+        const products = (await prodRes.json()) as any[];
+
+        console.log('🧹 Wiping existing catalog data on this server...');
+        // Delete all existing to ensure NO extra ones remain
+        await prisma.cartItem.deleteMany({});
+        await prisma.product.deleteMany({});
+        await prisma.category.deleteMany({});
+
+        console.log('📥 Inserting Exact Cloned Categories...');
+        let catCount = 0;
+        for (const cat of categories) {
+          await prisma.category.create({
+            data: { id: cat.id || cat._id, name: cat.name, slug: cat.slug || cat.name, sortOrder: cat.sortOrder || 0, isVisibleInWebapp: cat.isVisibleInWebapp !== false, isActive: true }
+          });
+          catCount++;
+        }
+
+        console.log('📥 Inserting Exact Cloned Products...');
+        let prodCount = 0;
+        for (const prod of products) {
+          await prisma.product.create({
+            data: { id: prod.id || prod._id, title: prod.title, price: prod.price || 0, categoryId: prod.categoryId, imageUrl: prod.imageUrl || null, summary: prod.summary || '', description: prod.description || null, sortOrder: prod.sortOrder || 0, isActive: true }
+          });
+          prodCount++;
+        }
         
-        // Extract IDs
-        const sourceProdIds = sourceProducts.map((p: any) => p.id || p._id);
-        const sourceCatIds = sourceCategories.map((c: any) => c.id || c._id);
-        
-        // Delete extras
-        const deletedProds = await prisma.product.deleteMany({
-          where: { id: { notIn: sourceProdIds } }
-        });
-        
-        const deletedCats = await prisma.category.deleteMany({
-          where: { id: { notIn: sourceCatIds } }
-        });
-        
-        res.json({
-          status: 'ok',
-          keptProducts: sourceProdIds.length,
-          keptCategories: sourceCatIds.length,
-          deletedProducts: deletedProds.count,
-          deletedCategories: deletedCats.count
-        });
+        console.log(`✅ 100% Sync complete: ${catCount} categories, ${prodCount} products`);
+        res.json({ success: true, message: `Successfully cloned EXACTLY ${catCount} categories and ${prodCount} products! Extra items removed.` });
       } catch (err: any) {
-        console.error('Cleanup error:', err);
+        console.error('Migration error:', err);
         res.status(500).json({ error: err.message });
       }
     });
