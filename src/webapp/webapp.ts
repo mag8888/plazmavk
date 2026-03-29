@@ -183,62 +183,67 @@ const extractTelegramUser = (req: express.Request, res: express.Response, next: 
   }
 };
 
-// Data Migration from old WebApp (Temporary endpoint)
+// Full Data Sync from old WebApp (100% match)
 router.get('/api/migrate-from-old', async (req, res) => {
   try {
     const { prisma } = await import('../lib/prisma.js');
     
-    console.log('🔄 Fetching categories from old app...');
-    const catRes = await fetch('https://plazma.up.railway.app/webapp/api/categories');
-    if (!catRes.ok) throw new Error(`Failed to fetch categories: ${catRes.statusText}`);
-    const categories = (await catRes.json()) as any[];
+    console.log('🔄 Fetching categories and products from old app for 100% sync...');
+    let fetchFn: any;
+    try { 
+      // @ts-ignore
+      fetchFn = (await import('node-fetch')).default; 
+    } catch (e) { fetchFn = fetch; }
+    const catRes = await fetchFn('https://plazma.up.railway.app/api/categories');
+    const prodRes = await fetchFn('https://plazma.up.railway.app/products');
     
+    if (!catRes.ok || !prodRes.ok) throw new Error('Failed to fetch from source');
+    const categories = (await catRes.json()) as any[];
+    const products = (await prodRes.json()) as any[];
+
+    console.log('🧹 Wiping existing catalog data on this server...');
+    // Delete all existing to ensure NO extra ones remain
+    await prisma.cartItem.deleteMany({}); // have to delete cart items first due to foreign keys
+    await prisma.product.deleteMany({});
+    await prisma.category.deleteMany({});
+
+    console.log('📥 Inserting Exact Cloned Categories...');
     let catCount = 0;
     for (const cat of categories) {
-      await prisma.category.upsert({
-        where: { id: cat.id },
-        update: { name: cat.name, slug: cat.slug, sortOrder: cat.sortOrder, isVisibleInWebapp: cat.isVisibleInWebapp },
-        create: { id: cat.id, name: cat.name, slug: cat.slug, sortOrder: cat.sortOrder, isVisibleInWebapp: cat.isVisibleInWebapp, isActive: true }
+      await prisma.category.create({
+        data: {
+          id: cat.id || cat._id,
+          name: cat.name,
+          slug: cat.slug || cat.name,
+          sortOrder: cat.sortOrder || 0,
+          isVisibleInWebapp: cat.isVisibleInWebapp !== false,
+          isActive: true
+        }
       });
       catCount++;
     }
 
-    console.log('🔄 Fetching products from old app...');
-    const prodRes = await fetch('https://plazma.up.railway.app/webapp/api/products');
-    if (!prodRes.ok) throw new Error(`Failed to fetch products: ${prodRes.statusText}`);
-    const products = (await prodRes.json()) as any[];
-
+    console.log('📥 Inserting Exact Cloned Products...');
     let prodCount = 0;
     for (const prod of products) {
-      await prisma.product.upsert({
-        where: { id: prod.id },
-        update: {
+      await prisma.product.create({
+        data: {
+          id: prod.id || prod._id,
           title: prod.title,
-          price: prod.price,
+          price: prod.price || 0,
           categoryId: prod.categoryId,
-          imageUrl: prod.imageUrl,
+          imageUrl: prod.imageUrl || null,
           summary: prod.summary || '',
           description: prod.description || null,
-          sortOrder: prod.sortOrder,
-          isActive: true
-        },
-        create: {
-          id: prod.id,
-          title: prod.title,
-          price: prod.price,
-          categoryId: prod.categoryId,
-          imageUrl: prod.imageUrl,
-          summary: prod.summary || '',
-          description: prod.description || null,
-          sortOrder: prod.sortOrder,
+          sortOrder: prod.sortOrder || 0,
           isActive: true
         }
       });
       prodCount++;
     }
     
-    console.log(`✅ Migration complete: ${catCount} categories, ${prodCount} products`);
-    res.json({ success: true, message: `Successfully migrated ${catCount} categories and ${prodCount} products!` });
+    console.log(`✅ 100% Sync complete: ${catCount} categories, ${prodCount} products`);
+    res.json({ success: true, message: `Successfully cloned EXACTLY ${catCount} categories and ${prodCount} products! Extra items removed.` });
   } catch (error: any) {
     console.error('❌ Migration error:', error);
     res.status(500).json({ error: error.message });
