@@ -228,6 +228,34 @@ async function bootstrap() {
       }
     });
 
+    // 404 handler
+    app.use((req, res) => {
+      console.log(`❌ 404 Not Found: ${req.method} ${req.originalUrl}`);
+      res.status(404).send('Not Found');
+    });
+
+    // Global Error Handler
+    app.use((err: any, req: any, res: any, next: any) => {
+      console.error('🔥 GLOBAL CRITICAL ERROR:', err);
+      // If headers are already sent, delegate to default express error handler
+      if (res.headersSent) {
+        return next(err)
+      }
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Global 500 Error</title></head>
+        <body style="padding: 2rem; font-family: monospace;">
+          <h1>Global 500 Error</h1>
+          <p><strong>Path:</strong> ${req.path}</p>
+          <pre style="background: #f0f0f0; padding: 1rem;">${err.stack || err.message || JSON.stringify(err)}</pre>
+        </body>
+        </html>
+      `);
+    });
+
+    console.log('✅ Server configured and ready.');
+
     // Web admin panel
     app.use('/admin/login', loginLimiter);
     app.use('/admin/broadcasts', broadcastRouter);
@@ -379,6 +407,26 @@ async function bootstrap() {
         // For non-API routes, redirect to webapp
         res.redirect('/webapp');
       }
+    });
+
+    // Global error handler for debugging the 500 error
+    app.use((err: any, req: any, res: any, next: any) => {
+      console.error('🔥 GLOBAL CRITICAL ERROR:', err);
+      // Let express handle it if headers are already sent
+      if (res.headersSent) {
+        return next(err);
+      }
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Global 500 Error</title></head>
+        <body style="padding: 2rem; font-family: monospace;">
+          <h1>Global 500 Error</h1>
+          <p><strong>Path:</strong> ${req.path}</p>
+          <pre style="background: #f0f0f0; padding: 1rem; border-radius: 4px;">${err.stack || err.message || JSON.stringify(err)}</pre>
+        </body>
+        </html>
+      `);
     });
 
     // app.listen moved to top
