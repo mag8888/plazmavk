@@ -143,7 +143,7 @@ async function bootstrap() {
       }
     });
 
-    app.use('/api/health', async (req, res) => {
+    app.use('/api/db-health', async (req, res) => {
       try {
         const sessionCount = await prisma.session.count();
         res.json({ status: 'ok', sessionTableExists: true, count: sessionCount });
