@@ -183,6 +183,60 @@ const extractTelegramUser = (req: express.Request, res: express.Response, next: 
   }
 };
 
+// Diagnostic endpoint for VK Sign debugging
+router.get('/api/vk-debug', (req, res) => {
+    const vkSignString = req.headers['x-vk-sign'] as string || req.query.sign_string as string;
+    const vkSecret = (process.env.VK_APP_SECRET || '').trim();
+    
+    if (!vkSignString) {
+        return res.json({ error: 'No X-VK-Sign header or sign_string query parameter provided' });
+    }
+
+    const queryString = vkSignString.startsWith('?') ? vkSignString.slice(1) : vkSignString;
+    const pairs = queryString.split('&');
+    const queryParams: Record<string, string> = {};
+    let sign = '';
+    
+    for (const pair of pairs) {
+        const eqIndex = pair.indexOf('=');
+        if (eqIndex === -1) continue;
+        
+        const key = pair.slice(0, eqIndex);
+        const value = pair.slice(eqIndex + 1);
+        
+        if (key === 'sign') {
+            sign = value;
+        } else if (key.startsWith('vk_')) {
+            queryParams[key] = value;
+        }
+    }
+    
+    const signParams = Object.keys(queryParams)
+        .sort()
+        .map(key => `${key}=${queryParams[key]}`)
+        .join('&');
+
+    const crypto = require('crypto');
+    const cryptoSign = crypto
+        .createHmac('sha256', vkSecret)
+        .update(signParams)
+        .digest('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+
+    res.json({
+        hasSecret: !!vkSecret,
+        secretLength: vkSecret.length,
+        secretPrefix: vkSecret ? vkSecret.substring(0, 4) + '...' : null,
+        signStringLength: vkSignString.length,
+        receivedSign: sign,
+        computedSign: cryptoSign,
+        signParamsExtracted: signParams,
+        isMatch: cryptoSign === sign
+    });
+});
+
 // Full Data Sync from old WebApp (100% match)
 router.get('/api/migrate-from-old', async (req, res) => {
   try {
