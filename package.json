@@ -11,7 +11,7 @@
     "prestart": "npx prisma db push --accept-data-loss",
     "start:refactored": "node dist/server-refactored.js",
     "start:simple": "node dist/server-simple-refactored.js",
-    "build": "rm -rf dist && tsc --project tsconfig-original.json && cp -r prisma dist/prisma",
+    "build": "npx prisma generate && rm -rf dist && tsc --project tsconfig-original.json && cp -r prisma dist/prisma",
     "build:refactored": "tsc --project tsconfig.json && echo 'Refactored version built successfully'",
     "build:simple": "tsc --project tsconfig-simple.json && echo 'Simple refactored version built successfully'",
     "migrate:dev": "prisma db push",

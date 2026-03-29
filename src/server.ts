@@ -143,6 +143,15 @@ async function bootstrap() {
       }
     });
 
+    app.use('/api/health', async (req, res) => {
+      try {
+        const sessionCount = await prisma.session.count();
+        res.json({ status: 'ok', sessionTableExists: true, count: sessionCount });
+      } catch (err: any) {
+        res.status(500).json({ status: 'error', sessionTableExists: false, error: err.message });
+      }
+    });
+
     // Configure session middleware (PostgreSQL)
     // Dynamic import to avoid issues if module is missing during build
     const pgSession = (await import('connect-pg-simple')).default(session);
