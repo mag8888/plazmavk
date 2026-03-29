@@ -5578,8 +5578,6 @@ async function loadRegions() {
             SELECTED_REGION = user.selectedRegion || 'RUSSIA';
         }
 
-        renderRegionButtons();
-
         // Ensure RUSSIA is default if nothing selected
         let currentRegion = localStorage.getItem('selectedRegion');
         if (!currentRegion) {
@@ -5587,38 +5585,12 @@ async function loadRegions() {
             localStorage.setItem('selectedRegion', 'RUSSIA');
         }
 
-        // Render as Select Dropdown
-        container.innerHTML = `
-            <div style="padding: 0 16px;">
-                <label style="display:block; margin-bottom:8px; font-weight:600; color:var(--text-primary); font-size:14px;">
-                    Ваш регион
-                </label>
-                <div class="select-wrapper" style="position:relative;">
-                    <select id="region-select" onchange="selectRegion(this.value)" 
-                        style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 16px; appearance: none; -webkit-appearance: none;">
-                        <option value="" disabled>Выберите регион</option>
-                        ${regions.map(r => `
-                            <option value="${r.code}" ${r.code === currentRegion ? 'selected' : ''}>
-                                ${r.name}
-                            </option>
-                        `).join('')}
-                    </select>
-                    <div style="position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-secondary);">
-                        ▼
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Update global state
         selectedRegion = currentRegion;
         updateRegionUI(selectedRegion);
 
     } catch (error) {
         console.error('Error loading regions:', error);
     }
-
-    innerDiv.innerHTML = html;
 }
 
 function openRegionModal() {

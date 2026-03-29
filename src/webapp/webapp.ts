@@ -95,7 +95,7 @@ function checkVkSign(paramsString: string, secret: string): boolean {
         .digest('base64')
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
-        .replace(/=$/g, '');
+        .replace(/=/g, '');
 
     return cryptoSign === sign;
 }
