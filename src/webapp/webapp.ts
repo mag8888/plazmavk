@@ -217,7 +217,7 @@ router.get('/api/migrate-from-old', async (req, res) => {
           price: prod.price,
           categoryId: prod.categoryId,
           imageUrl: prod.imageUrl,
-          summary: prod.summary || null,
+          summary: prod.summary || '',
           description: prod.description || null,
           sortOrder: prod.sortOrder,
           isActive: true
@@ -228,7 +228,7 @@ router.get('/api/migrate-from-old', async (req, res) => {
           price: prod.price,
           categoryId: prod.categoryId,
           imageUrl: prod.imageUrl,
-          summary: prod.summary || null,
+          summary: prod.summary || '',
           description: prod.description || null,
           sortOrder: prod.sortOrder,
           isActive: true
