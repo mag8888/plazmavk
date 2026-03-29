@@ -160,6 +160,43 @@ async function bootstrap() {
       }
     });
 
+    app.get('/api/sync-cleanup', async (req, res) => {
+      try {
+        const fetch = (await import('node-fetch')).default;
+        
+        // Fetch source content
+        const sourceProductsRes = await fetch('https://plazma.up.railway.app/products');
+        const sourceProducts: any = await sourceProductsRes.json();
+        
+        const sourceCategoriesRes = await fetch('https://plazma.up.railway.app/api/categories');
+        const sourceCategories: any = await sourceCategoriesRes.json();
+        
+        // Extract IDs
+        const sourceProdIds = sourceProducts.map((p: any) => p.id || p._id);
+        const sourceCatIds = sourceCategories.map((c: any) => c.id || c._id);
+        
+        // Delete extras
+        const deletedProds = await prisma.product.deleteMany({
+          where: { id: { notIn: sourceProdIds } }
+        });
+        
+        const deletedCats = await prisma.category.deleteMany({
+          where: { id: { notIn: sourceCatIds } }
+        });
+        
+        res.json({
+          status: 'ok',
+          keptProducts: sourceProdIds.length,
+          keptCategories: sourceCatIds.length,
+          deletedProducts: deletedProds.count,
+          deletedCategories: deletedCats.count
+        });
+      } catch (err: any) {
+        console.error('Cleanup error:', err);
+        res.status(500).json({ error: err.message });
+      }
+    });
+
     // Configure session middleware (PostgreSQL)
     // Dynamic import to avoid issues if module is missing during build
     let sessionDbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL || '';
