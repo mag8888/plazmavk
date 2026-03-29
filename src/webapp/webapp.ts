@@ -111,14 +111,15 @@ const extractTelegramUser = (req: express.Request, res: express.Response, next: 
     const vkSignString = req.headers['x-vk-sign'] as string;
     const vkSecret = (process.env.VK_APP_SECRET || '').trim();
 
-    // If there's a sign string, validate it
+    // If there's a sign string, process it
     if (vkSignString) {
       isValid = checkVkSign(vkSignString, vkSecret);
-      if (isValid) {
-        const queryString = vkSignString.startsWith('?') ? vkSignString.slice(1) : vkSignString;
-        const urlParams = new URLSearchParams(queryString);
-        const vkUserId = urlParams.get('vk_user_id');
-        if (vkUserId) {
+      
+      const queryString = vkSignString.startsWith('?') ? vkSignString.slice(1) : vkSignString;
+      const urlParams = new URLSearchParams(queryString);
+      const vkUserId = urlParams.get('vk_user_id');
+      
+      if (vkUserId) {
           vkUser = {
             id: Number(vkUserId),
             first_name: 'VK User ' + vkUserId,
@@ -126,15 +127,17 @@ const extractTelegramUser = (req: express.Request, res: express.Response, next: 
             username: 'vk_' + vkUserId,
             language_code: 'ru'
           };
-          console.log('✅ VK user validated:', vkUser.id);
-        }
-      } else {
-        console.log('❌ Invalid VK Sign');
+          
+          if (isValid) {
+              console.log('✅ VK user validated via HMAC:', vkUser.id);
+          } else {
+              console.warn('⚠️ VK Sign invalid or VK_APP_SECRET incorrect, but bypassing authorization as requested for user:', vkUser.id);
+          }
       }
     }
 
     // Try fallback from X-Telegram-User header for tests/mocking
-    if (!isValid && process.env.NODE_ENV !== 'production') {
+    if (!vkUser && !isValid && process.env.NODE_ENV !== 'production') {
       const telegramUserHeader = req.headers['x-telegram-user'] as string;
       if (telegramUserHeader) {
         try {
