@@ -2461,9 +2461,10 @@ router.get('/', requireAdmin, async (req, res) => {
       </body>
       </html>
     `);
-  } catch (error) {
+  } catch (error: any) {
+    const errStr = error instanceof Error ? error.stack || error.message : String(error);
     console.error('Admin panel error:', error);
-    res.status(500).send('Internal server error');
+    res.status(500).send('<h2>Internal Server Error</h2><pre>' + errStr.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>');
   }
 });
 // Detailed users management with sorting and filtering
