@@ -5586,7 +5586,6 @@ async function loadRegions() {
         }
 
         selectedRegion = currentRegion;
-        updateRegionUI(selectedRegion);
 
     } catch (error) {
         console.error('Error loading regions:', error);
