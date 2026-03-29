@@ -194,8 +194,8 @@ router.get('/api/migrate-from-old', async (req, res) => {
       // @ts-ignore
       fetchFn = (await import('node-fetch')).default; 
     } catch (e) { fetchFn = fetch; }
-    const catRes = await fetchFn('https://plazma.up.railway.app/api/categories');
-    const prodRes = await fetchFn('https://plazma.up.railway.app/products');
+    const catRes = await fetchFn('https://plazma.up.railway.app/webapp/api/categories');
+    const prodRes = await fetchFn('https://plazma.up.railway.app/webapp/api/products');
     
     if (!catRes.ok || !prodRes.ok) throw new Error('Failed to fetch from source');
     const categories = (await catRes.json()) as any[];
