@@ -4943,28 +4943,28 @@ function showDeliveryForm(items, totalRub, userBalance) {
                         <button class="delivery-form-close" onclick="closeDeliveryForm()">×</button>
                     </div>
                     <div class="delivery-form-body">
-                        <div style="margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <div style="margin-bottom: 20px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; gap: 8px;">
                                 <span>💰 Ваш баланс:</span>
-                                <strong>${Number(userBalance || 0).toFixed(2)} PZ (${userBalanceRub.toFixed(0)} ₽)</strong>
+                                <strong style="white-space: nowrap; text-align: right;">${Number(userBalance || 0).toFixed(2)} PZ (${userBalanceRub.toFixed(0)} ₽)</strong>
                             </div>
                             
-                            <div style="display: flex; justify-content: space-between;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; gap: 8px;">
                                 <span>📦 Сумма заказа:</span>
-                                <strong>${Number(totalRub || 0).toFixed(0)} ₽</strong>
+                                <strong style="white-space: nowrap; text-align: right;">${Number(totalRub || 0).toFixed(0)} ₽</strong>
                             </div>
                             
                             ${isPartner ? `
-                            <div style="display: flex; justify-content: space-between; color: var(--success-color);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--success-color); gap: 8px;">
                                 <span>🌟 Скидка партнера (-10%):</span>
-                                <strong>-${discountRub.toFixed(0)} ₽</strong>
+                                <strong style="white-space: nowrap; text-align: right;">-${discountRub.toFixed(0)} ₽</strong>
                             </div>` : ''}
 
-                            <div style="border-top: 1px solid var(--border-color); margin: 8px 0;"></div>
+                            <div style="border-top: 1px solid var(--border-color); margin: 10px 0;"></div>
 
-                            <div style="display: flex; justify-content: space-between; font-size: 16px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; gap: 8px;">
                                 <span>Итого к оплате:</span>
-                                <strong id="checkout-grand-total">${finalTotalRub.toFixed(0)} ₽</strong>
+                                <strong id="checkout-grand-total" style="white-space: nowrap; text-align: right;">${finalTotalRub.toFixed(0)} ₽</strong>
                             </div>
                         </div>
 
