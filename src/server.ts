@@ -163,9 +163,12 @@ async function bootstrap() {
     // Configure session middleware (PostgreSQL)
     // Dynamic import to avoid issues if module is missing during build
     let sessionDbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL || '';
-    if (sessionDbUrl.includes('postgresql://') && !sessionDbUrl.startsWith('postgresql://')) {
-      console.warn('⚠️  Fixing malformed DATABASE_URL:', sessionDbUrl);
-      sessionDbUrl = sessionDbUrl.substring(sessionDbUrl.indexOf('postgresql://'));
+    
+    // Aggressively fix concatenated or malformed DATABASE_URL strings 
+    // (e.g. postgresql://.../railwaypostgresql://...)
+    const pgUrls = sessionDbUrl.split('postgresql://').filter(Boolean);
+    if (pgUrls.length > 0) {
+      sessionDbUrl = 'postgresql://' + pgUrls[0];
     }
 
     const pgSession = (await import('connect-pg-simple')).default(session);
