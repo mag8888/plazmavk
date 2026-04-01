@@ -4619,9 +4619,19 @@ async function submitBalanceTopupReceipt() {
         if (!resp.ok || !data?.success) {
             throw new Error(data?.error || 'Ошибка отправки чека');
         }
-        if (statusEl) statusEl.textContent = 'Чек отправлен. Мы проверим оплату и пополним баланс.';
+        if (statusEl) {
+            statusEl.textContent = '✅ Чек успешно отправлен. Мы проверим оплату и пополним ваш баланс.';
+            statusEl.style.color = '#10b981'; // Success green color
+            statusEl.style.fontWeight = 'bold';
+        }
         showSuccess('Чек отправлен');
         if (fileEl) fileEl.value = '';
+        if (amountEl) amountEl.value = '';
+        const btnNode = document.querySelector('button[onclick="submitBalanceTopupReceipt()"]');
+        if (btnNode) {
+            btnNode.textContent = 'Отправлено';
+            btnNode.classList.add('disabled');
+        }
     } catch (e) {
         console.error('Receipt submit error:', e);
         const statusEl = document.getElementById('balance-topup-status');
