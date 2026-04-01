@@ -5365,7 +5365,10 @@ function updateBadges() {
 function showSuccess(message) {
     // Show success message (could be a toast notification)
     console.log('Success:', message);
-    if (tg) {
+    if (typeof window !== 'undefined' && window.vkBridge) {
+        // We are in VK Mini App
+        alert(message);
+    } else if (tg && typeof tg.showAlert === 'function') {
         tg.showAlert(message);
     } else {
         alert(message);
@@ -5375,7 +5378,10 @@ function showSuccess(message) {
 function showError(message) {
     // Show error message (could be a toast notification)
     console.log('Error:', message);
-    if (tg) {
+    if (typeof window !== 'undefined' && window.vkBridge) {
+        // We are in VK Mini App
+        alert(message);
+    } else if (tg && typeof tg.showAlert === 'function') {
         tg.showAlert(message);
     } else {
         alert(message);
