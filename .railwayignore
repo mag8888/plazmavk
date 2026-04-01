@@ -1,13 +1,13 @@
 # Игровые файлы (не нужны для бота)
-working.html
-index.html
-simple.html
-status.html
-test-server.html
-lobby.html
+/working.html
+/index.html
+/simple.html
+/status.html
+/test-server.html
+/lobby.html
 
 # Серверные файлы (не нужны для бота)
-server.js
+/server.js
 
 # Документация
 README.md

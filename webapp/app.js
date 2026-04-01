@@ -3083,12 +3083,8 @@ async function submitReview() {
             formData.append('media', mediaInput.files[0]);
         }
 
-        // Build headers manually (no Content-Type — browser sets multipart boundary)
-        const headers = {};
-        const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-        if (telegramUser) {
-            try { headers['X-Telegram-User'] = encodeURIComponent(JSON.stringify(telegramUser)); } catch (_) { }
-        }
+        const headers = typeof getApiHeaders === 'function' ? getApiHeaders() : {};
+        delete headers['Content-Type']; // Let browser set boundary
 
         const response = await fetch(`${API_BASE}/reviews/submit`, {
             method: 'POST',
@@ -4611,9 +4607,12 @@ async function submitBalanceTopupReceipt() {
         form.append('amountRub', String(amount));
         form.append('receipt', fileEl.files[0]);
 
+        const headers = getApiHeaders();
+        delete headers['Content-Type']; // Let browser set boundary
+
         const resp = await fetch(`${API_BASE}/balance/topup-receipt`, {
             method: 'POST',
-            headers: { 'X-Telegram-User': JSON.stringify(getTelegramUserData()) },
+            headers: headers,
             body: form
         });
         const data = await resp.json().catch(() => ({}));
@@ -4625,6 +4624,8 @@ async function submitBalanceTopupReceipt() {
         if (fileEl) fileEl.value = '';
     } catch (e) {
         console.error('Receipt submit error:', e);
+        const statusEl = document.getElementById('balance-topup-status');
+        if (statusEl) statusEl.textContent = ''; // Reset status text
         showError('Не удалось отправить чек');
     }
 }
