@@ -17807,6 +17807,15 @@ router.get('/balance-topups', requireAdmin, async (_req, res) => {
     const escapeAttr = (str: any) => escapeHtml(str).replace(/'/g, '&#39;');
 
     res.send(`
+      <!DOCTYPE html>
+      <html lang="ru">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Пополнения баланса</title>
+        <style>${ADMIN_UI_CSS}</style>
+      </head>
+      <body>
       ${renderAdminShellStart({ title: 'Пополнения баланса', activePath: '/admin/balance-topups', buildMarker })}
         <div class="card" style="padding:16px; margin-bottom: 16px;">
           <h2 style="margin:0 0 8px 0;">Текст страницы пополнения</h2>
@@ -17909,6 +17918,8 @@ router.get('/balance-topups', requireAdmin, async (_req, res) => {
         </script>
 
       ${renderAdminShellEnd()}
+      </body>
+      </html>
     `);
   } catch (error: any) {
     console.error('Balance topups page error:', error);
