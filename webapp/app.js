@@ -4943,6 +4943,9 @@ function showDeliveryForm(items, totalRub, userBalance) {
                 discountRub = totalRub * 0.1;
             }
             const finalTotalRub = totalRub - discountRub;
+            
+            // Сохраняем элементы для checkout, чтобы не передавать через inline HTML (защита от багов с кавычками)
+            window.__checkoutItems = items;
 
             const dialog = document.createElement('div');
             dialog.className = 'delivery-form-modal';
@@ -5038,7 +5041,7 @@ function showDeliveryForm(items, totalRub, userBalance) {
                           </label>
                         </div>
                         
-                        <button class="btn" onclick="submitDeliveryForm(${JSON.stringify(items).replace(/"/g, '&quot;')}, ${Number(finalTotalRub || 0)}, ${Number(userBalance || 0)})" style="width: 100%;">
+                        <button class="btn" onclick="submitDeliveryForm(${Number(finalTotalRub || 0)}, ${Number(userBalance || 0)})" style="width: 100%;">
                             Оформить заказ
                         </button>
                         <button class="btn btn-secondary" onclick="closeDeliveryForm()" style="width: 100%; margin-top: 12px;">
@@ -5057,6 +5060,26 @@ function showDeliveryForm(items, totalRub, userBalance) {
                 cityInput.addEventListener('blur', () => setTimeout(hideCitySuggestions, 150));
                 cityInput.addEventListener('focus', () => renderCitySuggestions(cityInput));
             }
+            
+            // Телефон: маска ввода
+            const phoneInput = document.getElementById('delivery-phone');
+            if (phoneInput) {
+                const applyMask = () => {
+                    let val = phoneInput.value.replace(/\D/g, '');
+                    if (!val) { phoneInput.value = ''; return; }
+                    if (val[0] === '8') val = '7' + val.slice(1);
+                    if (val[0] !== '7') val = '7' + val;
+                    let fmt = '+7 ';
+                    if (val.length > 1) fmt += '(' + val.substring(1, 4);
+                    if (val.length >= 5) fmt += ') ' + val.substring(4, 7);
+                    if (val.length >= 8) fmt += '-' + val.substring(7, 9);
+                    if (val.length >= 10) fmt += '-' + val.substring(9, 11);
+                    phoneInput.value = fmt;
+                };
+                phoneInput.addEventListener('input', applyMask);
+                if (phoneInput.value) applyMask(); // Вызвать для инициализации, если есть userData.phone
+            }
+
             // Инициализируем UI баланса
             const cb = document.getElementById('pay-from-balance');
             if (cb && userBalanceRub <= 0) {
@@ -5100,7 +5123,8 @@ function openBalanceFromCheckout() {
     setTimeout(() => openSection('balance'), 220);
 }
 
-async function submitDeliveryForm(items, finalTotalRub, userBalance) {
+async function submitDeliveryForm(finalTotalRub, userBalance) {
+    const items = window.__checkoutItems || [];
     const phone = document.getElementById('delivery-phone')?.value?.trim();
     const city = document.getElementById('delivery-city')?.value?.trim();
     const address = document.getElementById('delivery-address')?.value?.trim();
