@@ -61,6 +61,26 @@ async function bootstrap() {
     app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
     app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok', bot: 'active' }));
 
+    // TEMPORARY ENDPOINT TO FIX THE IMAGE
+    app.get('/api/fix-cert', async (req, res) => {
+      try {
+        const templates = await prisma.certificateTemplate.findMany();
+        if (templates.length > 0) {
+          // Replace the first template that might be a screenshot, or just the very first one
+          await prisma.certificateTemplate.update({
+            where: { id: templates[0].id },
+            data: { imageUrl: 'https://res.cloudinary.com/dcldvbjvf/image/upload/v1775226404/zikd3kzph6ac1tgtoa3c.jpg' }
+          });
+          res.send('<h1>✅ Картинка сертификата успешно заменена на вашу! Перезагрузите Mini App.</h1>');
+        } else {
+          res.send('<h1>❌ Сертификаты не найдены. Сначала запустите /api/sync-dev-db</h1>');
+        }
+      } catch(e: any) {
+        res.send('Error: ' + e.message);
+      }
+    });
+
+
     app.get('/api/sync-dev-db', async (req, res) => {
       try {
         const { PrismaClient } = await import('@prisma/client');
