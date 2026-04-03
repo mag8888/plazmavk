@@ -947,7 +947,7 @@ h4 {
     min-height: 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 .hidden {
@@ -2156,6 +2156,7 @@ h4 {
 
     .section-body {
         padding: 12px;
+        padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 
