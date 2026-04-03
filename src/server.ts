@@ -60,6 +60,31 @@ async function bootstrap() {
     // Health check endpoints (Early init for Railway)
     app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
     app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok', bot: 'active' }));
+
+    app.get('/api/sync-dev-db', async (req, res) => {
+      try {
+        const { PrismaClient } = await import('@prisma/client');
+        const srcUrl = 'postgresql://postgres:kwLNcGVsOARHCGbyoGHukxbWUEBrsmay@centerbeam.proxy.rlwy.net:33113/railway';
+        const src = new PrismaClient({ datasources: { db: { url: srcUrl } } });
+        const dst = prisma;
+        const ts = ['category', 'product', 'promotion', 'certificateType', 'certificateTemplate', 'settings'];
+        let results = [];
+        for(let t of ts){
+          const r = await (src as any)[t].findMany();
+          if(r.length){
+            await (dst as any)[t].deleteMany();
+            await (dst as any)[t].createMany({data:r});
+            results.push(`✅ Скопировано ${r.length} записей в таблицу ${t}`);
+          }
+        }
+        await src.$disconnect();
+        res.status(200).send(`<html><body style="font-family: sans-serif; padding: 40px; text-align: center;"><h1>🎉 База данных скопирована!</h1><p>Все товары, категории и настройки успешно загружены в новую базу.</p><div style="text-align:left;max-width:500px;margin:20px auto;background:#f4f4f4;padding:20px;border-radius:10px;">${results.join('<br>')}</div><a href="/webapp" style="display:inline-block;padding:10px 20px;background:#007aff;color:#fff;text-decoration:none;border-radius:8px;">Перейти в магазин</a></body></html>`);
+      } catch (err: any) {
+        console.error(err);
+        res.status(500).send('Ошибка копирования: ' + err.message);
+      }
+    });
+
     app.get('/', (req, res) => {
       if (req.headers['user-agent']?.includes('Railway') || req.query.healthcheck) {
         res.status(200).json({ status: 'ok', service: 'plazma-bot' });
