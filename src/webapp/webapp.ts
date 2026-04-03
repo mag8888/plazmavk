@@ -3118,8 +3118,8 @@ router.get('/api/plazma/products', async (req, res) => {
   try {
     const { env } = await import('../config/env.js');
 
-    if (!env.plazmaApiKey) {
-      console.warn('⚠️ Plazma API key not configured');
+    if (true) { // Force disability to match dev2 "no extra products" behavior
+      console.warn('⚠️ Plazma API proxy intentionally disabled for standalone VK Mini App');
       return res.status(503).json({
         error: 'Plazma API integration not configured',
         products: []
