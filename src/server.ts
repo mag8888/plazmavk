@@ -82,22 +82,37 @@ async function bootstrap() {
 
     app.get('/api/sync-dev-db', async (req, res) => {
       try {
-        const { PrismaClient } = await import('@prisma/client');
-        const srcUrl = 'postgresql://postgres:kwLNcGVsOARHCGbyoGHukxbWUEBrsmay@centerbeam.proxy.rlwy.net:33113/railway';
-        const src = new PrismaClient({ datasources: { db: { url: srcUrl } } });
-        const dst = prisma;
-        const ts = ['category', 'product', 'promotion', 'certificateType', 'certificateTemplate', 'settings'];
+        console.log('🔄 Fetching from dev2 REST API...');
+        
+        const categoriesRes = await fetch('https://plazma-dev2.up.railway.app/categories');
+        const categories = await categoriesRes.json();
+        const productsRes = await fetch('https://plazma-dev2.up.railway.app/products');
+        const products = await productsRes.json();
+
         let results = [];
-        for(let t of ts){
-          const r = await (src as any)[t].findMany();
-          if(r.length){
-            await (dst as any)[t].deleteMany();
-            await (dst as any)[t].createMany({data:r});
-            results.push(`✅ Скопировано ${r.length} записей в таблицу ${t}`);
-          }
+        
+        if (categories && categories.length) {
+          await prisma.product.deleteMany();
+          await prisma.category.deleteMany();
+          
+          const cleanCats = categories.map((c: any) => {
+            const { products, ...rest } = c;
+            return rest;
+          });
+          await prisma.category.createMany({ data: cleanCats });
+          results.push(`✅ Скопировано ${cleanCats.length} записей в таблицу category`);
         }
-        await src.$disconnect();
-        res.status(200).send(`<html><body style="font-family: sans-serif; padding: 40px; text-align: center;"><h1>🎉 База данных скопирована!</h1><p>Все товары, категории и настройки успешно загружены в новую базу.</p><div style="text-align:left;max-width:500px;margin:20px auto;background:#f4f4f4;padding:20px;border-radius:10px;">${results.join('<br>')}</div><a href="/webapp" style="display:inline-block;padding:10px 20px;background:#007aff;color:#fff;text-decoration:none;border-radius:8px;">Перейти в магазин</a></body></html>`);
+        
+        if (products && products.length) {
+          const cleanProds = products.map((p: any) => {
+            const { category, ...rest } = p;
+            return { ...rest, isActive: true };
+          });
+          await prisma.product.createMany({ data: cleanProds });
+          results.push(`✅ Скопировано ${cleanProds.length} записей в таблицу product`);
+        }
+
+        res.status(200).send(`<html><body style="font-family: sans-serif; padding: 40px; text-align: center;"><h1>🎉 База данных синхронизирована с DEV2!</h1><p>Контент загружен напрямую из публичного интерфейса dev2.</p><div style="text-align:left;max-width:500px;margin:20px auto;background:#f4f4f4;padding:20px;border-radius:10px;">${results.join('<br>')}</div><a href="/webapp" style="display:inline-block;padding:10px 20px;background:#007aff;color:#fff;text-decoration:none;border-radius:8px;">Перейти в магазин</a></body></html>`);
       } catch (err: any) {
         console.error(err);
         res.status(500).send('Ошибка копирования: ' + err.message);

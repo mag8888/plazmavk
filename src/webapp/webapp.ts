@@ -3060,12 +3060,10 @@ router.post('/api/import-products', async (req, res) => {
     const { prisma } = await import('../lib/prisma.js');
     const productCount = await prisma.product.count();
 
-    if (productCount > 0) {
-      return res.json({
-        success: false,
-        message: `Каталог уже содержит ${productCount} товаров. Импорт не требуется.`
-      });
-    }
+    return res.json({
+      success: false,
+      message: 'Импорт отключен, чтобы сохранить базу строго 1-в-1 с dev2.'
+    });
 
     // Запускаем импорт в фоне
     import('../services/siam-import-service.js').then(async (module) => {
