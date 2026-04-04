@@ -114,7 +114,7 @@ async function bootstrap() {
 
           const cleanProds = products.map((p: any) => {
             const { category, ...rest } = p;
-            return { ...rest, isActive: true };
+            return { ...rest, summary: p.summary || '', isActive: true };
           });
           
           if (cleanProds.length) {
