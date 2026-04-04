@@ -84,32 +84,43 @@ async function bootstrap() {
       try {
         console.log('🔄 Fetching from dev2 REST API...');
         
-        const categoriesRes = await fetch('https://plazma-dev2.up.railway.app/categories');
-        const categories = await categoriesRes.json();
         const productsRes = await fetch('https://plazma-dev2.up.railway.app/products');
+        if (!productsRes.ok) throw new Error('Failed to fetch products from dev2');
         const products = await productsRes.json();
 
         let results = [];
         
-        if (categories && categories.length) {
+        if (products && products.length) {
           await prisma.product.deleteMany();
           await prisma.category.deleteMany();
           
-          const cleanCats = categories.map((c: any) => {
+          // Extract unique categories from products
+          const categoriesMap = new Map();
+          products.forEach((p: any) => {
+            if (p.category) {
+              categoriesMap.set(p.category.id, p.category);
+            }
+          });
+          
+          const cleanCats = Array.from(categoriesMap.values()).map((c: any) => {
             const { products, ...rest } = c;
             return rest;
           });
-          await prisma.category.createMany({ data: cleanCats });
-          results.push(`✅ Скопировано ${cleanCats.length} записей в таблицу category`);
-        }
-        
-        if (products && products.length) {
+          
+          if (cleanCats.length) {
+            await prisma.category.createMany({ data: cleanCats });
+            results.push(`✅ Скопировано ${cleanCats.length} записей в таблицу category`);
+          }
+
           const cleanProds = products.map((p: any) => {
             const { category, ...rest } = p;
             return { ...rest, isActive: true };
           });
-          await prisma.product.createMany({ data: cleanProds });
-          results.push(`✅ Скопировано ${cleanProds.length} записей в таблицу product`);
+          
+          if (cleanProds.length) {
+            await prisma.product.createMany({ data: cleanProds });
+            results.push(`✅ Скопировано ${cleanProds.length} записей в таблицу product`);
+          }
         }
 
         res.status(200).send(`<html><body style="font-family: sans-serif; padding: 40px; text-align: center;"><h1>🎉 База данных синхронизирована с DEV2!</h1><p>Контент загружен напрямую из публичного интерфейса dev2.</p><div style="text-align:left;max-width:500px;margin:20px auto;background:#f4f4f4;padding:20px;border-radius:10px;">${results.join('<br>')}</div><a href="/webapp" style="display:inline-block;padding:10px 20px;background:#007aff;color:#fff;text-decoration:none;border-radius:8px;">Перейти в магазин</a></body></html>`);
