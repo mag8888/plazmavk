@@ -1631,6 +1631,9 @@ async function buildGiftCertSection() {
             { imageUrl: 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772267061/plazma/certificates/uoq0s1b1xxcyurp7jx2y.jpg' }
         ];
     }
+    
+    // Always ensure the new blue certificate is available as the primary one
+    templates.unshift({ imageUrl: '/static/images/cert-blue.jpg' });
     const defaultDesignUrl = templates[0].imageUrl;
 
     return `
@@ -1644,7 +1647,7 @@ async function buildGiftCertSection() {
         <div id="gift-cert-designs" style="display:flex; overflow-x:auto; gap:12px; margin-bottom:16px; padding-bottom:8px; -webkit-overflow-scrolling:touch;">
             <div onclick="uploadCustomGiftDesign()" id="gift-cert-upload-btn"
                  style="min-width:140px; height:90px; border-radius:12px; border:2px dashed #9ca3af; cursor:pointer;
-                 display:flex; align-items:center; justify-content:center; flex-direction:column;
+                 display: none !important; align-items:center; justify-content:center; flex-direction:column;
                  background: #f9fafb; color: #6b7280; transition: border 0.2s;">
                 <div style="font-size: 24px;">+</div>
                 <div style="font-size: 11px; font-weight:600; text-align:center; padding: 0 4px;">Свое фото</div>
