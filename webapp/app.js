@@ -1632,8 +1632,9 @@ async function buildGiftCertSection() {
         ];
     }
     
-    // Always ensure the new blue certificate is available as the primary one
-    templates.unshift({ imageUrl: '/static/images/cert-blue.jpg' });
+    // Always ensure the correct certificate is available as the primary one, avoiding duplicates
+    templates = templates.filter(t => t.imageUrl !== 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772107030/plazma/certificates/fgpp96vijifxbjzisln8.png');
+    templates.unshift({ imageUrl: 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772107030/plazma/certificates/fgpp96vijifxbjzisln8.png' });
     const defaultDesignUrl = templates[0].imageUrl;
 
     return `
