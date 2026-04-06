@@ -1587,53 +1587,28 @@ async function buildGiftCertSection() {
                 certs.forEach(c => {
                     const amountRub = Math.round(Number(c.amountRub || 0) || Number(c.initialPz || 0) * 100);
                     const bgUrl = c.imageUrl || 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772107030/plazma/certificates/fgpp96vijifxbjzisln8.png';
-                    const isActive = c.status === 'ACTIVE';
-                    
-                    const wrapperStyle = `
+                    myCertsHtml += `
+                    <div style="
                         background: url('${bgUrl}') center/cover no-repeat;
                         border-radius:20px; padding:24px 20px; margin-bottom:14px;
                         box-shadow:0 6px 20px rgba(26,26,46,0.35);
                         display:flex; align-items:flex-end; justify-content:space-between;
                         min-height:200px; position:relative; overflow:hidden;
-                        transition: opacity 0.3s ease;
-                        ${!isActive ? 'opacity: 0.6; filter: grayscale(0.8);' : ''}
-                    `;
-                    
-                    myCertsHtml += `<div id="my-cert-${c.id}" style="${wrapperStyle}">`;
-                    
-                    if (isActive) {
-                        myCertsHtml += `
-                            <div style="background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 12px; backdrop-filter: blur(4px);">
-                                <div style="font-weight:800; font-size:24px; color:#fff; letter-spacing:-0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.5);">${amountRub.toLocaleString('ru-RU')} ₽</div>
-                                <div style="font-size:11px; color:rgba(255,255,255,0.85); margin-top:2px;">
-                                    Код: <b>${escapeHtml(c.code)}</b>
-                                    <span onclick="event.stopPropagation(); copyShareText('${escapeHtml(c.code)}')" style="margin-left:6px; cursor:pointer; color:#60a5fa; text-decoration:underline;">Копировать</span>
-                                </div>
+                    ">
+                        <div style="background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 12px; backdrop-filter: blur(4px);">
+                            <div style="font-weight:800; font-size:24px; color:#fff; letter-spacing:-0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.5);">${amountRub.toLocaleString('ru-RU')} ₽</div>
+                            <div style="font-size:11px; color:rgba(255,255,255,0.85); margin-top:2px;">
+                                Код: <b>${escapeHtml(c.code)}</b>
+                                <span onclick="event.stopPropagation(); copyShareText('${escapeHtml(c.code)}')" style="margin-left:6px; cursor:pointer; color:#60a5fa; text-decoration:underline;">Копировать</span>
                             </div>
-                            <button onclick="openGiftModal('${escapeAttr(c.id)}', ${amountRub})" style="
-                                padding:10px 18px; border-radius:14px; border:1px solid rgba(255,255,255,0.5);
-                                background:rgba(26,26,46,0.5); backdrop-filter:blur(4px);
-                                color:#fff; font-size:13px; font-weight:700; cursor:pointer;
-                                white-space:nowrap; flex-shrink:0; margin-left:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2);
-                            ">Подарить</button>
-                        `;
-                    } else {
-                        myCertsHtml += `
-                            <div style="background: rgba(220, 38, 38, 0.85); padding: 8px 12px; border-radius: 12px; backdrop-filter: blur(4px);">
-                                <div style="font-weight:700; font-size:14px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.5);">Срок действия истек</div>
-                                <div style="font-size:11px; color:rgba(255,255,255,0.9); margin-top:2px;">
-                                    Номинал: ${amountRub.toLocaleString('ru-RU')} ₽
-                                </div>
-                            </div>
-                            <button onclick="hideCertificate('${escapeAttr(c.id)}')" style="
-                                padding:10px 18px; border-radius:14px; border:none;
-                                background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
-                                color:#fff; font-size:13px; font-weight:700; cursor:pointer;
-                                white-space:nowrap; flex-shrink:0; margin-left:12px;
-                            ">❌ Убрать</button>
-                        `;
-                    }
-                    myCertsHtml += `</div>`;
+                        </div>
+                        <button onclick="openGiftModal('${escapeAttr(c.id)}', ${amountRub})" style="
+                            padding:10px 18px; border-radius:14px; border:1px solid rgba(255,255,255,0.5);
+                            background:rgba(26,26,46,0.5); backdrop-filter:blur(4px);
+                            color:#fff; font-size:13px; font-weight:700; cursor:pointer;
+                            white-space:nowrap; flex-shrink:0; margin-left:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2);
+                        ">Подарить</button>
+                    </div>`;
                 });
                 myCertsHtml += `</div>`;
             }
@@ -1656,10 +1631,6 @@ async function buildGiftCertSection() {
             { imageUrl: 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1775205197/plazma/certificates/zn9nug2snu7sxtn6voa9.png' }
         ];
     }
-    
-    // Always ensure the correct certificate is available as the primary one, avoiding duplicates
-    templates = templates.filter(t => t.imageUrl !== 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772107030/plazma/certificates/fgpp96vijifxbjzisln8.png');
-    templates.unshift({ imageUrl: 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772107030/plazma/certificates/fgpp96vijifxbjzisln8.png' });
     const defaultDesignUrl = templates[0].imageUrl;
 
     return `
@@ -1673,7 +1644,7 @@ async function buildGiftCertSection() {
         <div id="gift-cert-designs" style="display:flex; overflow-x:auto; gap:12px; margin-bottom:16px; padding-bottom:8px; -webkit-overflow-scrolling:touch;">
             <div onclick="uploadCustomGiftDesign()" id="gift-cert-upload-btn"
                  style="min-width:140px; height:90px; border-radius:12px; border:2px dashed #9ca3af; cursor:pointer;
-                 display: none !important; align-items:center; justify-content:center; flex-direction:column;
+                 display:flex; align-items:center; justify-content:center; flex-direction:column;
                  background: #f9fafb; color: #6b7280; transition: border 0.2s;">
                 <div style="font-size: 24px;">+</div>
                 <div style="font-size: 11px; font-weight:600; text-align:center; padding: 0 4px;">Свое фото</div>
@@ -1956,25 +1927,6 @@ window.uploadCustomGiftDesign = function() {
         }
     };
     input.click();
-};
-
-window.hideCertificate = async function(id) {
-    if (!confirm('Вы уверены, что хотите скрыть этот сертификат? Он исчезнет из списка.')) return;
-    try {
-        const res = await fetch(`${API_BASE}/certificates/${id}/hide`, { 
-            method: 'POST', 
-            headers: getApiHeaders() 
-        });
-        if (res.ok) {
-            const el = document.getElementById(`my-cert-${id}`);
-            if (el) {
-                el.style.opacity = '0';
-                setTimeout(() => el.remove(), 300);
-            }
-        }
-    } catch (e) {
-        console.error('Ошибка скрытия сертификата:', e);
-    }
 };
 
 function openGiftModal(certId, amountRub) {
