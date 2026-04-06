@@ -1619,7 +1619,7 @@ router.get('/api/certificates/my', async (req, res) => {
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
     const { prisma } = await import('../lib/prisma.js');
     const certs = await prisma.giftCertificate.findMany({
-      where: { userId: user.id, status: 'ACTIVE' },
+      where: { userId: user.id, status: { not: 'ARCHIVED' } },
       orderBy: { createdAt: 'desc' }
     });
     res.json({
@@ -1631,12 +1631,37 @@ router.get('/api/certificates/my', async (req, res) => {
         remainingRub: Math.round(Number(c.remainingPz) * 100),
         createdAt: c.createdAt,
         typeId: c.typeId,
-        imageUrl: c.imageUrl
+        imageUrl: c.imageUrl,
+        status: c.status
       }))
     });
   } catch (error: any) {
     console.error('My certificates error:', error);
     res.status(500).json({ success: false, error: error?.message || 'Ошибка загрузки сертификатов' });
+  }
+});
+
+router.post('/api/certificates/:id/hide', async (req, res) => {
+  try {
+    const user = await getOrCreateWebappUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const certId = req.params.id;
+    const { prisma } = await import('../lib/prisma.js');
+    
+    const cert = await prisma.giftCertificate.findUnique({ where: { id: certId } });
+    if (!cert || cert.userId !== user.id) {
+      return res.status(404).json({ error: 'Сертификат не найден' });
+    }
+    
+    await prisma.giftCertificate.update({
+      where: { id: certId },
+      data: { status: 'ARCHIVED' }
+    });
+    
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('Hide certificate error:', error);
+    res.status(500).json({ success: false, error: 'Ошибка скрытия сертификата' });
   }
 });
 
