@@ -1627,7 +1627,7 @@ async function buildGiftCertSection() {
     if (templates.length === 0) {
         templates = [
             { imageUrl: 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772107030/plazma/certificates/fgpp96vijifxbjzisln8.png' },
-            { imageUrl: 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1772440894/plazma/certificates/hfazabilttijyunxsutg.jpg' },
+            { imageUrl: '/webapp/static/happy-birthday.jpg' },
             { imageUrl: 'https://res.cloudinary.com/dt4r1tigf/image/upload/v1775205197/plazma/certificates/zn9nug2snu7sxtn6voa9.png' }
         ];
     }
