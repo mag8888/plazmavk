@@ -165,6 +165,10 @@ function getApiHeaders() {
         'X-Telegram-User': encodeURIComponent(userJson)
     };
 
+    if (window.Telegram?.WebApp?.initData) {
+        headers['X-Telegram-Init-Data'] = window.Telegram.WebApp.initData;
+    }
+
     return headers;
 }
 
